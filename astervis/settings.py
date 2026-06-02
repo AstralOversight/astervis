@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(os.environ.get("DEBUG", default=0))
+DEBUG = bool(os.environ.get("DJANGO_DEBUG", default=0))
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS","127.0.0.1").split(",")
 
@@ -75,8 +75,12 @@ WSGI_APPLICATION = "astervis.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": os.environ.get("DATABASE_ENGINE", default="django.db.backends.postgres"),
+        "NAME": os.environ.get("DATABASE_NAME", default="postgres"),
+        "USER": os.environ.get("DATABASE_USERNAME", default="postgres"),
+        "PASSWORD": os.environ.get("DATABASE_PASSWORD", default="postgres"),
+        "HOST": os.environ.get("DATABASE_HOST", default="db"),
+        "PORT": int(os.environ.get("DATABASE_PORT", default="5432")),
     }
 }
 
