@@ -8,4 +8,5 @@ def index(request):
     return HttpResponse("Hello, you are at the search index.")
 
 def page(request):
-    return render(request, "search/search.html")
+    context = {"asteroids_list": ["Big Rock", "Small Rock", "Continent Killer"]}
+    return render(request, "search/search.html", context)
