@@ -13,7 +13,7 @@
             {% if asteroids_list %}
                 {% for asteroid in asteroids_list %}
                 <tr>
-                    <td><a href="/visualizer/{{ asteroid }}/">{{ asteroid }}</a></td>
+                    <td><a><!--<a href="{% url 'visualizer' asteroid %}">-->{{ asteroid }}</a></td>
                 </tr>
                 {% endfor %}
             {% else %}

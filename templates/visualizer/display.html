@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <h1>Image {{ set.id }}</h1>
+    <p>From: {{ set.year }}-{{ set.day }}</p>
+    <p>Set: {{ set }}</p>
+    <!--<table>
+        <tbody>
+            {% if set.simple %}
+                {% for asteroid in asteroids_list %}
+                <tr>
+                    <td><a href="/visualizer/{{ asteroid }}/">{{ asteroid }}</a></td>
+                </tr>
+                {% endfor %}
+            {% else %}
+                <tr>No asteroids are available.</tr>
+            {% endif %}
+        </tbody>
+    </table>-->
+{% endblock %}
