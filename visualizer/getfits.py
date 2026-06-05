@@ -18,7 +18,7 @@ def all_for_day(year:int, day:int):
     with FTP("data.asc-csa.gc.ca") as ftp:
         ftp.login()
         
-        all = files_for_day(ftp, year, day)
+        all = day_list(ftp, year, day)
         #no_type = [elem[:-8] for elem in all]
         ftp.close()
     raw = []
@@ -34,6 +34,7 @@ def all_for_day(year:int, day:int):
     
     pausetime = 10
     baseurl = "ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/"+year.__str__()+"/"+day.__str__()+"/"
+    no_dupes = []
 
     for elem in raw:
         has_cor = False
@@ -48,11 +49,13 @@ def all_for_day(year:int, day:int):
                 has_cord = True
                 cord.remove(cord_elem)
                 break
-        
-        save_header(baseurl+elem, year, day, True, has_cor, has_cord)
 
-        print("Imported: "+elem)
-        time.sleep(pausetime)
+        no_dupes.append("|".join([elem, True.__str__(), has_cor.__str__(), has_cord.__str__()]))
+        
+        # save_header(baseurl+elem, year, day, True, has_cor, has_cord)
+
+        # print("Imported: "+elem)
+        # time.sleep(pausetime)
     
     for elem in cor:
         has_cord = False
@@ -62,18 +65,39 @@ def all_for_day(year:int, day:int):
                 cord.remove(cord_elem)
                 break
         
-        save_header(baseurl+elem, year, day, False, True, has_cord)
-        
-        print("Imported Cor: "+elem)
-        time.sleep(pausetime)
+        no_dupes.append("|".join([elem, False.__str__(), True.__str__(), has_cord.__str__()]))
     
     for elem in cord:
-        save_header(baseurl+elem, year, day, False, False, True)
+        no_dupes.append("|".join([elem, False.__str__(), False.__str__(), True.__str__()]))
+    
+    summary_str = "\n".join(no_dupes)
 
-        print("Imported Cord: "+elem)
+    with open(year.__str__()+"-"+day.__str__()+".txt", "w") as file:
+       file.write(summary_str)
+    
+    get_remaining(year, day)
+
+def get_remaining(year:int, day:int):
+    lines = []
+    pausetime = 10
+    with open(year.__str__()+"-"+day.__str__()+".txt", "r") as file:
+       lines = file.readlines()
+
+    while len(lines) > 0:
+        line = (lines.pop()).split("|")
+
+        save_header("ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/"+year.__str__()+"/"+day.__str__()+"/"+line[0],
+                    year, day, 'True' in line[1], 'True' in line[2], 'True' in line[3])
+        # print("users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/"+year.__str__()+"/"+day.__str__()+"/"+line[0],
+        #             year, day, 'True' in line[1], 'True' in line[2], 'True' in line[3])
         time.sleep(pausetime)
+        
+        with open(year.__str__()+"-"+day.__str__()+".txt", "w") as file:
+            file.write("".join(lines))
+    
 
-def files_for_day(ftp:FTP, year:int, day:int):
+
+def day_list(ftp:FTP, year:int, day:int):
     ftp.cwd("users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/"+year.__str__()+"/"+day.__str__()+"/")
     return ftp.nlst()
 
@@ -85,7 +109,7 @@ def files_for_day(ftp:FTP, year:int, day:int):
 #             f.write("\n".join(chnk))
 
 def save_header(url, year:int, day:int, has_raw:bool, has_cor:bool, has_cord:bool): # ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/2026/109/NEOS_SCI_2026109004941_cord.fits.gz
-    with FITS.open(url, use_fsspec=True, memmap=False) as hdul:
+    with FITS.open(url, use_fsspec=True, memmap=False, cache=False) as hdul:
         obs = create_observation(hdul[0].header, year, day, has_raw, has_cor, has_cord, False)
         obs.save()
         del obs
