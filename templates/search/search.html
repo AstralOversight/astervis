@@ -10,14 +10,14 @@
             </tr>
         </thead>
         <tbody>
-            {% if asteroids_list %}
-                {% for asteroid in asteroids_list %}
+            {% if observation_list %}
+                {% for observation in observation_list %}
                 <tr>
-                    <td><a><!--<a href="{% url 'visualizer' asteroid %}">-->{{ asteroid }}</a></td>
+                    <td><a><!--<a href="{% url 'visualizer' observation %}">-->{{ observation }}</a></td>
                 </tr>
                 {% endfor %}
             {% else %}
-                <tr>No asteroids are available.</tr>
+                <tr>No observations are available.</tr>
             {% endif %}
         </tbody>
     </table>

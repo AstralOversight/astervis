@@ -24,7 +24,6 @@ from django.db import models
 #         return "'" + self.image_file + "' of type:" + self.type
 
 class ObservationSet(models.Model):
-    id = models.IntegerField(primary_key=True)
     xbinning = models.IntegerField()
     ybinning = models.IntegerField()
     creator = models.CharField(max_length=16)
@@ -81,4 +80,4 @@ class ObservationSet(models.Model):
         c = ("✅", "❌")[self.cor is None]
         d = ("✅", "❌")[self.cord is None]
         cl = (", CL:✅", "")[self.clean is None]
-        return "(ObservationSet: " + self.id + " | S:" + s + " C:" + c + " D:" + d + cl + ")"
+        return "(ObservationSet: " + self.obs_id + " | S:" + s + " C:" + c + " D:" + d + cl + ")"
