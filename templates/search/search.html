@@ -13,7 +13,7 @@
             {% if observation_list %}
                 {% for observation in observation_list %}
                 <tr>
-                    <td><a><!--<a href="{% url 'visualizer' observation %}">-->{{ observation }}</a></td>
+                    <td><a><a href="{% url 'visualizer' observation.obs_id %}">{{ observation }}</a></td>
                 </tr>
                 {% endfor %}
             {% else %}

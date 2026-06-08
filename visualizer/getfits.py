@@ -32,7 +32,6 @@ def all_for_day(year:int, day:int):
         else:
             raw.append(elem)
     
-    pausetime = 10
     baseurl = "ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/"+year.__str__()+"/"+day.__str__()+"/"
     no_dupes = []
 
@@ -51,11 +50,6 @@ def all_for_day(year:int, day:int):
                 break
 
         no_dupes.append("|".join([elem, True.__str__(), has_cor.__str__(), has_cord.__str__()]))
-        
-        # save_header(baseurl+elem, year, day, True, has_cor, has_cord)
-
-        # print("Imported: "+elem)
-        # time.sleep(pausetime)
     
     for elem in cor:
         has_cord = False
@@ -77,23 +71,33 @@ def all_for_day(year:int, day:int):
     
     get_remaining(year, day)
 
-def get_remaining(year:int, day:int):
+def get_remaining(year:int, day:int, pausetime:int=30):
     lines = []
-    pausetime = 10
     with open(year.__str__()+"-"+day.__str__()+".txt", "r") as file:
        lines = file.readlines()
 
     while len(lines) > 0:
         line = (lines.pop()).split("|")
 
-        save_header("ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/"+year.__str__()+"/"+day.__str__()+"/"+line[0],
-                    year, day, 'True' in line[1], 'True' in line[2], 'True' in line[3])
-        # print("users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/"+year.__str__()+"/"+day.__str__()+"/"+line[0],
-        #             year, day, 'True' in line[1], 'True' in line[2], 'True' in line[3])
-        time.sleep(pausetime)
+        present:bool = False
+
+        for elem in ObservationSet.objects.filter(year__exact=year, day__exact=day):
+            if line[0] in elem.obs_id:
+                present = True
+                break
+
+        if not present:
+            print("Observation '"+line[0]+"': ", end="")
+            save_header("ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/"+year.__str__()+"/"+day.__str__()+"/"+line[0],
+                        year, day, 'True' in line[1], 'True' in line[2], 'True' in line[3])
+            print("Recorded!")
+        else:
+            print("Observation '"+line[0]+"' already recorded! Skipping.")
         
         with open(year.__str__()+"-"+day.__str__()+".txt", "w") as file:
             file.write("".join(lines))
+        
+        time.sleep(pausetime)
     
 
 
@@ -109,12 +113,10 @@ def day_list(ftp:FTP, year:int, day:int):
 #             f.write("\n".join(chnk))
 
 def save_header(url, year:int, day:int, has_raw:bool, has_cor:bool, has_cord:bool): # ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/2026/109/NEOS_SCI_2026109004941_cord.fits.gz
-    with FITS.open(url, use_fsspec=True, memmap=False, cache=False) as hdul:
-        obs = create_observation(hdul[0].header, year, day, has_raw, has_cor, has_cord, False)
-        obs.save()
-        del obs
-        hdul.close()
-        del hdul
+    with FITS.open(url, use_fsspec=True, memmap=False) as hdul:
+        header = hdul[0].header # FITS.getheader(url, use_fsspec=True, ext=0)
+    obs = create_observation(header, year, day, has_raw, has_cor, has_cord, False)
+    obs.save()
 
 def create_observation(header, year:int, day:int, has_raw:bool=True, has_cor:bool=False, has_cord:bool=False, has_clean:bool=False):
     return ObservationSet(
