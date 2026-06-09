@@ -5,7 +5,7 @@
     <p>From: {{ set.year }}-{{ set.day }}</p>
     <p>Set: {{ set }}</p>
     <canvas width="1024" height="1024">
-        Here is where the observation would go.
+        The observation will go here. It is most likely rendering at the moment.
     </canvas>
     {% load static %}
     <script src="{% static 'visualizer/fits.js' %}" type="text/javascript" charset="utf-8"></script>
@@ -13,17 +13,18 @@
         var FITS = astro.FITS;
 
         var callback = function() {
-            //const ctx = document.getElementById("canvas").getContext("2d");
-            const width = 1078;
-            const height = 1020;
-
             const canvas = document.querySelector("canvas");
             const ctx = canvas.getContext("2d");
-            const imgData = ctx.createImageData(width, height);
+
+            var header = this.getHeader();
+
+            const width = header.get('NAXIS1'); // get image width
+            const height = header.get('NAXIS2'); // get image height
             
+            const imgData = ctx.createImageData(width, height);
             this.getDataUnit().getFrame(0, (pixels) => {
-                var min = 1500//pixels[0]
-                var max = 5000//pixels[0]
+                var min = 1500
+                var max = 5000
 
                 // pixels.forEach(element => {
                 //     if (element < min) min = element;
@@ -43,8 +44,6 @@
                 };
 
                 ctx.putImageData(imgData, 0, 0);
-
-                console.log(min, max, range)
             })
         }
 
