@@ -4,17 +4,51 @@
     <h1>Image {{ set.obs_id }}</h1>
     <p>From: {{ set.year }}-{{ set.day }}</p>
     <p>Set: {{ set }}</p>
-    <!--<table>
-        <tbody>
-            {% if set.simple %}
-                {% for asteroid in asteroids_list %}
-                <tr>
-                    <td><a href="/visualizer/{{ asteroid }}/">{{ asteroid }}</a></td>
-                </tr>
-                {% endfor %}
-            {% else %}
-                <tr>No asteroids are available.</tr>
-            {% endif %}
-        </tbody>
-    </table>-->
+    <canvas width="1024" height="1024">
+        Here is where the observation would go.
+    </canvas>
+    {% load static %}
+    <script src="{% static 'visualizer/fits.js' %}" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript">
+        var FITS = astro.FITS;
+
+        var callback = function() {
+            //const ctx = document.getElementById("canvas").getContext("2d");
+            const width = 1078;
+            const height = 1020;
+
+            const canvas = document.querySelector("canvas");
+            const ctx = canvas.getContext("2d");
+            const imgData = ctx.createImageData(width, height);
+            
+            this.getDataUnit().getFrame(0, (pixels) => {
+                var min = 1500//pixels[0]
+                var max = 5000//pixels[0]
+
+                // pixels.forEach(element => {
+                //     if (element < min) min = element;
+                //     if (element > max) max = element;
+                // });
+
+                const range = max - min
+
+                for (var i = 0; i < pixels.length; i++) {
+                    var value = ((pixels[i] - min) / range) * 255;
+
+
+                    imgData.data[i*4 + 0] = value;
+                    imgData.data[i*4 + 1] = value;
+                    imgData.data[i*4 + 2] = value;
+                    imgData.data[i*4 + 3] = 255;
+                };
+
+                ctx.putImageData(imgData, 0, 0);
+
+                console.log(min, max, range)
+            })
+        }
+
+        var url = "{{location|escapejs}}";
+        var fits = new FITS(url, callback);
+    </script>
 {% endblock %}
