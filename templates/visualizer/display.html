@@ -17,24 +17,24 @@
             const ctx = canvas.getContext("2d");
 
             var header = this.getHeader();
+            var data = this.getDataUnit();
 
             const width = header.get('NAXIS1'); // get image width
             const height = header.get('NAXIS2'); // get image height
-            
+
+            //Draw the image
             const imgData = ctx.createImageData(width, height);
-            this.getDataUnit().getFrame(0, (pixels) => {
-                var min = 1500
-                var max = 5000
+            data.getFrame(0, (pixels) => {
+                //Due to the side full of black and white pixels, this is kinda broken
+                // Array[Min, Max]
+                // var minmax = FITS.ImageUtils.getExtent(pixels);
+                var minmax = [2000, 4500]
 
-                // pixels.forEach(element => {
-                //     if (element < min) min = element;
-                //     if (element > max) max = element;
-                // });
+                const range = minmax[1] - minmax[0]
 
-                const range = max - min
-
+                // Paint the pixels.
                 for (var i = 0; i < pixels.length; i++) {
-                    var value = ((pixels[i] - min) / range) * 255;
+                    var value = ((pixels[i] - minmax[0]) / range) * 255;
 
 
                     imgData.data[i*4 + 0] = value;
