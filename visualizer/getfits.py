@@ -168,3 +168,13 @@ def create_observation(header, year:int, day:int, has_raw:bool=True, has_cor:boo
         cord = has_cord,
         clean = has_clean
     )
+
+def save_file(base, path, file): # ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/2026/109/NEOS_SCI_2026109004941_cord.fits.gz
+    with FTP(base) as ftp:
+        ftp.login()
+        ftp.cwd(path)
+
+        with open("static/visualizer/stored_observations/"+file, 'wb') as fp:
+            ftp.retrbinary('RETR '+file, fp.write)
+
+        ftp.quit()

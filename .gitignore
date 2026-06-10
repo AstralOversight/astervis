@@ -1,5 +1,8 @@
 # Python Cache
 astervis/__pycache__
 
+# Stored observations
+static/visualizer/stored_observations/*
+
 # Yeah, I'm not sharing this
 .env
