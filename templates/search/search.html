@@ -4,21 +4,24 @@
     <h1>This is the search page!</h1>
     <p>You'll be able to find things here!</p>
     <script>
+        const strInput = "<input type='text' id='value' name='value' minlength='0' maxlength='32'/>";
+        const intInput = "<input type='number' id='value' name='value'/>";
+        const datInput = "<input type='datetime-local' id='value' name='value'/>";
+
         function addFilter() {
             var row = document.createElement("tr");
             row.innerHTML = 
-                "<select name='filter-value' id='filter-value'>"+
+                "<select name='filter-value' id='filter-value' onchange='typeFields()'>"+
                     "<option value='string'>String</option>"+
                     "<option value='number'>Number</option>"+
                     "<option value='date'>Date</option>"+
-                    "onchange='typeFields()'"+
                 "</select>"+
                 "<select name='filter-type' id='filter-type'>"+
                     "<option value='matches'>Matches</option>"+
                     "<option value='contains'>Contains</option>"+
                     "<option value='excludes'>Excludes</option>"+
                 "</select>"+
-                "<input type='text' id='value' name='value' minlength='0' maxlength='32'/>";
+                strInput;
             document.getElementById("filters").appendChild(row);
         }
 
