@@ -76,8 +76,8 @@ class ObservationSet(models.Model):
     # cord = models.ForeignKey(ImageDetails, null=True, on_delete=models.SET_NULL, related_name="cord_image")
 
     def __str__(self):
-        s = ("✅", "❌")[self.raw is None or self.raw is False]
+        r = ("✅", "❌")[self.raw is None or self.raw is False]
         c = ("✅", "❌")[self.cor is None or self.cor is False]
         d = ("✅", "❌")[self.cord is None or self.cord is False]
         cl = (", CL:✅", "")[self.clean is None or self.clean is False]
-        return "(ObservationSet: " + self.obs_id + " | S:" + s + " C:" + c + " D:" + d + cl + ")"
+        return "(ObservationSet: " + self.obs_id + " | R:" + r + " C:" + c + " D:" + d + cl + ")"

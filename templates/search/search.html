@@ -3,10 +3,64 @@
 {% block content %}
     <h1>This is the search page!</h1>
     <p>You'll be able to find things here!</p>
+    <script>
+        function addFilter() {
+            var row = document.createElement("tr");
+            row.innerHTML = 
+                "<select name='filter-value' id='filter-value'>"+
+                    "<option value='string'>String</option>"+
+                    "<option value='number'>Number</option>"+
+                    "<option value='date'>Date</option>"+
+                    "onchange='typeFields()'"+
+                "</select>"+
+                "<select name='filter-type' id='filter-type'>"+
+                    "<option value='matches'>Matches</option>"+
+                    "<option value='contains'>Contains</option>"+
+                    "<option value='excludes'>Excludes</option>"+
+                "</select>"+
+                "<input type='text' id='value' name='value' minlength='0' maxlength='32'/>";
+            document.getElementById("filters").appendChild(row);
+        }
+
+        function typeFields() {
+            console.log("f")
+        }
+
+        function search() {
+
+        }
+    </script>
     <table>
         <thead>
             <tr>
-                <th scope="col">Photos</th>
+                <th scope="col">Observations</th>
+            </tr>
+            <tr>
+                <th scope="col">
+                    <details>
+                        <summary>
+                            Search Filters ⚙️
+                        </summary>
+                        <table>
+                            <tbody id="filters">
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>
+                                        <input type="button"
+                                            onclick="addFilter()"
+                                            value="Add Filter"></input>
+                                    </th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </details>
+                </th>
+            </tr>
+            <tr>
+                <input type="submit"
+                    onclick="search()"
+                    value="Search"></input>
             </tr>
         </thead>
         <tbody>
