@@ -5,47 +5,51 @@
     <p>You'll be able to find things here!</p>
     <script>
         // Arrays containing id, name, type (s:string, n:number, d:date)
-        const options = [
-            ["string", "String", 's'],
-            ["number", "Number", 'n'],
-            ["date", "Date", 'd'],
-        ]
+        const options = new Map();
+        options.set("string", ["String", 's']);
+        options.set("number", ["Number", 'n']);
+        options.set("date", ["Date", 'd']);
 
         function addFilter() {
-            addFilter(options[0][0], "")
+            // Creates an empty string filter.
+            addFilter(null, "")
         }
 
         function addFilter(selected, value) {
             var row = document.createElement("tr");
             var select = "<select name='filter-value' id='filter-value' onchange='typeFields()'>";
             var selType = "";
-            var input = "";
 
-            options.forEach((option) => {
-                if (selected === option[0]) {
-                    select += "<option value='"+option[0]+"' selected>"+option[1]+"</option>";
-                    selType = option[2];
+            // Create the options in the filter dropdown
+            options.forEach((settings, optionId) => {
+                // If an option was selected and it's this one, mark it as such
+                if (selected === optionId) {
+                    select += "<option value='"+optionId+"' selected>"+settings[0]+"</option>";
+                    selType = settings[1];
                 } else 
-                select += "<option value='"+option[0]+"'>"+option[1]+"</option>";
+                select += "<option value='"+optionId+"'>"+settings[0]+"</option>";
             })
             select += "</select>";
 
-            switch (selType) {
+            // Create the input field and format it correctly.
+            var input = "<input id='value' name='value'";
+            switch (options.get(selected)[1]) {
                 case 'n':
-                    input = "<input type='number' id='value' name='value'";
+                    input += " type='number'";
                     break
                 case 'd':
-                    input = "<input type='datetime-local' id='value' name='value'";
+                    input += " type='datetime-local'";
                     break
                 case 's':
                 default:
-                    input = "<input type='text' id='value' name='value' maxlength='32'";
+                    input += " type='text' maxlength='32'";
             }
             if (value) {
                 input += " value='"+value+"'";
             }
             input += "/>";
             
+            // Final HTML for the element
             row.innerHTML = 
                 select+
                 "<select name='filter-type' id='filter-type'>"+
@@ -55,9 +59,6 @@
                 "</select>"+
                 input;
             document.getElementById("filters").appendChild(row);
-
-            //TODO: reactivate when the filter select works...
-            typeFields();
         }
 
         function typeFields() {
@@ -65,16 +66,16 @@
             filters.forEach(filter => {
                 field = filter.nextElementSibling.nextElementSibling;
                 //TODO: make use of the actual options
-                switch (filter.selectedOptions[0].value) {
-                    case "number":
+                switch (options.get(filter.selectedOptions[0].value)[1]) {
+                    case "n":
                         field.setAttribute("type", "number");
                         field.removeAttribute("maxlength");
                         break
-                    case "date":
+                    case "d":
                         field.setAttribute("type", "datetime-local");
                         field.removeAttribute("maxlength");
                         break
-                    case "string":
+                    case "s":
                     default:
                         field.setAttribute("type", "text");
                         field.setAttribute("maxlength", "32");
@@ -142,7 +143,6 @@
     <script>
         var params = new URLSearchParams(document.location.search);
         if (params.getAll.length > 0) {
-            console.log(document.getElementById("filter-expand"));
             document.getElementById("filter-expand").setAttribute("open", "");
 
             params.forEach((value, key) => {
