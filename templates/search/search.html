@@ -5,11 +5,11 @@
     <p>You'll be able to find things here!</p>
     <script>
         // Arrays containing id, name, type (s:string, n:number, d:date)
+        const unprocessed = "{{ fields|safe }}";
         const options = new Map();
-        options.set("string", ["String", 's']);
-        options.set("number", ["Number", 'n']);
-        options.set("date", ["Date", 'd']);
-        options.set("bool", ["Boolean", 'b']);
+        unprocessed.split(",").forEach((value) => {
+            if (value) options.set(value.substring(1), [value.substring(1), value.substring(0,1)]);
+        })
 
         function addFilter() {
             // Creates an empty string filter.
@@ -132,11 +132,6 @@
                     <input type="submit"
                         onclick="search()"
                         value="Search"></input>
-                </th>
-            </tr>
-            <tr>
-                <th>
-                    {{ reqs }}
                 </th>
             </tr>
         </thead>
