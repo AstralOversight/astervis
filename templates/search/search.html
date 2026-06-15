@@ -9,6 +9,7 @@
         options.set("string", ["String", 's']);
         options.set("number", ["Number", 'n']);
         options.set("date", ["Date", 'd']);
+        options.set("bool", ["Boolean", 'b']);
 
         function addFilter() {
             // Creates an empty string filter.
@@ -33,12 +34,15 @@
 
             // Create the input field and format it correctly.
             var input = "<input id='value' name='value'";
-            switch (options.get(selected)[1]) {
+            switch (options.has(selected) ? options.get(selected)[1] : null) {
                 case 'n':
                     input += " type='number'";
                     break
                 case 'd':
                     input += " type='datetime-local'";
+                    break
+                case 'b':
+                    input += " type='checkbox'";
                     break
                 case 's':
                 default:
@@ -65,7 +69,6 @@
             var filters = document.getElementsByName("filter-value");
             filters.forEach(filter => {
                 field = filter.nextElementSibling.nextElementSibling;
-                //TODO: make use of the actual options
                 switch (options.get(filter.selectedOptions[0].value)[1]) {
                     case "n":
                         field.setAttribute("type", "number");
@@ -73,6 +76,10 @@
                         break
                     case "d":
                         field.setAttribute("type", "datetime-local");
+                        field.removeAttribute("maxlength");
+                        break
+                    case "b":
+                        field.setAttribute("type", "checkbox");
                         field.removeAttribute("maxlength");
                         break
                     case "s":
@@ -125,6 +132,11 @@
                     <input type="submit"
                         onclick="search()"
                         value="Search"></input>
+                </th>
+            </tr>
+            <tr>
+                <th>
+                    {{ reqs }}
                 </th>
             </tr>
         </thead>
