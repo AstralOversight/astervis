@@ -35,7 +35,6 @@
                 dark_range.max = minminmaxmax[1];
                 light_range.min = minminmaxmax[0];
                 light_range.max = minminmaxmax[1];
-                console.log(minminmaxmax);
 
                 // Array[Min, Max]
                 var minmax = [dark_range.value, light_range.value];
@@ -55,6 +54,17 @@
 
                 ctx.putImageData(imgData, 0, 0);
             })
+
+            const info_list = document.getElementById("info-list");
+            Object.entries(header.cards).forEach(([key, value]) => {
+                if (value.value || value.comment) {
+                    var item = document.createElement("li");
+                    var str = key + ": " + value.value;
+                    if (value.comment) str += " /" + value.comment;
+                    item.append(str);
+                    info_list.appendChild(item);
+                }
+            });
         }
 
         function reload() {
@@ -73,4 +83,11 @@
         <label for="light">White value.</label>
     </div>
     <button onclick="reload()">Render</button>
+    <details id="info">
+        <summary>
+            Details 🔎
+        </summary>
+        <ul id="info-list">
+        </ul>
+    </details>
 {% endblock %}
