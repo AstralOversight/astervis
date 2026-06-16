@@ -14,6 +14,13 @@
     <script type="text/javascript">
         var FITS = astro.FITS;
 
+        const rawmap = {};
+
+        var summap = function(map, value) {
+            if (map[value]) map[value] = map[value]+1;
+            else map[value] = 1;
+        }
+
         var callback = function() {
             const canvas = document.querySelector("canvas");
             const ctx = canvas.getContext("2d");
@@ -30,21 +37,20 @@
             const imgData = ctx.createImageData(width, height);
             data.getFrame(0, (pixels) => {
                 //Due to the side full of black and white pixels, this is kinda broken
-                var minminmaxmax = FITS.ImageUtils.getExtent(pixels);
-                dark_range.min = minminmaxmax[0];
-                dark_range.max = minminmaxmax[1];
-                light_range.min = minminmaxmax[0];
-                light_range.max = minminmaxmax[1];
+                // On further inspection, they're not actually fully black???
+                var totminmax = FITS.ImageUtils.getExtent(pixels);
+                dark_range.min = totminmax[0];
+                dark_range.max = totminmax[1];
+                light_range.min = totminmax[0];
+                light_range.max = totminmax[1];
 
-                // Array[Min, Max]
-                var minmax = [dark_range.value, light_range.value];
-
-                const range = minmax[1] - minmax[0];
+                const range = light_range.value - dark_range.value;
 
                 // Paint the pixels.
                 for (var i = 0; i < pixels.length; i++) {
-                    var value = ((pixels[i] - minmax[0]) / range) * 255;
+                    var value = ((pixels[i] - dark_range.value) / range) * 255;
 
+                    summap(rawmap, pixels[i]-totminmax[0]);//+header.get('BZERO'));???????? maybe?? idk,,,
 
                     imgData.data[i*4 + 0] = value;
                     imgData.data[i*4 + 1] = value;
@@ -53,6 +59,8 @@
                 };
 
                 ctx.putImageData(imgData, 0, 0);
+
+                graph(totminmax[0])
             })
 
             const info_list = document.getElementById("info-list");
@@ -67,6 +75,36 @@
             });
         }
 
+        function graph(minimum) {
+            const canvas = document.getElementById("light-graph");
+            const ctx = canvas.getContext("2d");
+            const values = Object.entries(rawmap);
+
+            // Dimensions
+            canvas.width = 1000;
+            canvas.height = 350;
+            const buffer = 20;
+
+            // Maximum pixel count of light level.
+            var max = 0;
+            for (let i = 0; i < values.length; i++) {
+                if (max < values[i][1]) max = values[i][1];
+            }
+            
+            // Trace graph
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height-buffer);
+            for (let i = 0; i < values.length; i++) {
+                ctx.lineTo(i*canvas.width/values.length, canvas.height-(values[i][1]*(canvas.height-buffer)/max)-buffer);
+                // Current level text & tick
+                if (i % 100 == 0) ctx.fillText((values[i][0]), i+2, canvas.height)
+                if (i % 100 == 50) ctx.fillText((values[i][0]), i+2, canvas.height-10)
+                if (i % 50 == 0) ctx.fillRect(i, canvas.height-buffer, 1, buffer);
+            }
+            ctx.closePath();
+            ctx.fill();
+        }
+
         function reload() {
             var url = "{{location|escapejs}}";
             var fits = new FITS(url, callback);
@@ -75,14 +113,17 @@
         reload();
     </script>
     <div>
-        <input type="range" id="dark" name="dark" min="0" max="2000" value="1000" onclick="reload()"/>
+        <input type="number" id="dark" name="dark" min="0" max="2000" value="1000" onclick="reload()"/>
         <label for="dark">Black value.</label>
     </div>
     <div>
-        <input type="range" id="light" name="light" min="5000" max="10000" value="6000" onclick="reload()"/>
+        <input type="number" id="light" name="light" min="5000" max="10000" value="6000" onclick="reload()"/>
         <label for="light">White value.</label>
     </div>
     <button onclick="reload()">Render</button>
+    <div>
+        <canvas id="light-graph">A graph displaying the dispersion of the pixel light levels.</canvas>
+    </div>
     <details id="info">
         <summary>
             Details 🔎
