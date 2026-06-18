@@ -10,6 +10,12 @@
         unprocessed.split(",").forEach((value) => {
             if (value) options.set(value.substring(1), [value.substring(1), value.substring(0,1)]);
         })
+        const types = new Map();
+        types.set("m", "Matches");
+        types.set("c", "Contains");
+        types.set("l", "Lesser than");
+        types.set("g", "Greater than");
+        types.set("e", "Excludes");
 
         function addFilter() {
             // Creates an empty string filter.
@@ -19,6 +25,7 @@
         function addFilter(selected, value) {
             var row = document.createElement("tr");
             var select = "<select name='filter-value' id='filter-value' onchange='typeFields()'>";
+            var filterType = "<select name='filter-type' id='filter-type'>";
             var selType = "";
 
             // Create the options in the filter dropdown
@@ -31,6 +38,16 @@
                 select += "<option value='"+optionId+"'>"+settings[0]+"</option>";
             })
             select += "</select>";
+
+            // Create the filter type dropdown
+            types.forEach((typeName, typeKey) => {
+                // If this type was selected
+                if (value && value.substring(0, 1) === typeKey) {
+                    filterType += "<option value='"+typeKey+"' selected>"+typeName+"</option>";
+                } else 
+                filterType += "<option value='"+typeKey+"'>"+typeName+"</option>";
+            })
+            filterType += "</select>";
 
             // Create the input field and format it correctly.
             var input = "<input id='value' name='value'";
@@ -49,18 +66,14 @@
                     input += " type='text' maxlength='32'";
             }
             if (value) {
-                input += " value='"+value+"'";
+                input += " value='"+value.substring(1)+"'";
             }
             input += "/>";
             
             // Final HTML for the element
             row.innerHTML = 
                 select+
-                "<select name='filter-type' id='filter-type'>"+
-                    "<option value='matches'>Matches</option>"+
-                    "<option value='contains'>Contains</option>"+
-                    "<option value='excludes'>Excludes</option>"+
-                "</select>"+
+                filterType+
                 input;
             document.getElementById("filters").appendChild(row);
         }
@@ -95,7 +108,7 @@
             var filters = document.getElementsByName("filter-value");
             filters.forEach(filter => {
                 field = filter.nextElementSibling.nextElementSibling;
-                if (field.value) newURL += "&" + filter.value + "=" + encodeURIComponent(field.value);
+                if (field.value) newURL += "&" + encodeURIComponent(filter.value) + "=" + encodeURIComponent(filter.nextElementSibling.value) + encodeURIComponent(field.value);
             });
             document.location.href = newURL;
         }
