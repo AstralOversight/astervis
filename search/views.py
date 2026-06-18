@@ -6,6 +6,7 @@ from visualizer.models import ObservationSet
 from django.db.models import fields
 import datetime
 
+specialTerms = ["page"]
 searches = [
     # Types
     # String
@@ -86,38 +87,39 @@ def page(request):
     
     search = ""
     for param in request.GET:
-        if search: 
-            search += " AND "
-        
-        type = 0
-        value = request.GET[param][1:]
-        field = ObservationSet._meta.get_field(param)
-        match field.__class__:
-            case fields.IntegerField | fields.FloatField | fields.BigAutoField:
-                type = 1
-            case fields.DateTimeField:
-                type = 2
-                value = " ".join(request.GET[param][1:].split("T"))
-            case fields.BooleanField:
-                type = 3
-                value = "True" if request.GET[param][1:] == "on" else "False"
-            case fields.CharField | fields.TextField | _:
-                type = 0
-        
-        comp = 0
-        match request.GET[param][0]:
-            case "c":
-                comp = 1
-            case "g":
-                comp = 2
-            case "l":
-                comp = 3
-            case "e":
-                comp = 4
-            case "m" | _:
-                comp = 0
-        
-        search += searches[type][comp].format(param=param, value=value)
+        if param not in specialTerms:
+            if search: 
+                search += " AND "
+            
+            type = 0
+            value = request.GET[param][1:]
+            field = ObservationSet._meta.get_field(param)
+            match field.__class__:
+                case fields.IntegerField | fields.FloatField | fields.BigAutoField:
+                    type = 1
+                case fields.DateTimeField:
+                    type = 2
+                    value = " ".join(request.GET[param][1:].split("T"))
+                case fields.BooleanField:
+                    type = 3
+                    value = "True" if request.GET[param][1:] == "on" else "False"
+                case fields.CharField | fields.TextField | _:
+                    type = 0
+            
+            comp = 0
+            match request.GET[param][0]:
+                case "c":
+                    comp = 1
+                case "g":
+                    comp = 2
+                case "l":
+                    comp = 3
+                case "e":
+                    comp = 4
+                case "m" | _:
+                    comp = 0
+            
+            search += searches[type][comp].format(param=param, value=value)
     
     sql = "SELECT id, obs_id FROM visualizer_observationset"
     if search:
@@ -125,6 +127,16 @@ def page(request):
 
     obss = ObservationSet.objects.raw(sql)
 
-    context = {"observation_list": obss[:50],
-               "fields": stringed}
+    # What page to display
+    pageN = 1
+    perPage = 50
+    try:
+        pageN = int(request.GET["page"])
+    except:
+        pass
+
+    context = {"observation_list": obss[(pageN-1)*perPage:pageN*perPage],
+               "fields": stringed,
+               "obs_len": obss.__len__,
+               "page": pageN,}
     return render(request, "search/search.html", context)
