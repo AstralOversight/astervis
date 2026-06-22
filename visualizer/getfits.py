@@ -128,6 +128,7 @@ def prep_file(set:ObservationSet, type:ObsType, overwrite:bool=False): # ftp://d
             header = hdul[0].header
         obs = create_header(header)
         obs.save()
+        set.header = obs
         set.saved = True
 
 def create_header(header):
