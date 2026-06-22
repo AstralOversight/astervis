@@ -76,7 +76,7 @@ WSGI_APPLICATION = "astervis.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": os.environ.get("DATABASE_ENGINE", default="django.db.backends.postgres"),
+        "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("DATABASE_NAME", default="postgres"),
         "USER": os.environ.get("DATABASE_USERNAME", default="postgres"),
         "PASSWORD": os.environ.get("DATABASE_PASSWORD", default="postgres"),
