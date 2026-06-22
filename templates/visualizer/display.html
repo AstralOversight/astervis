@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 
 {% block content %}
-    <h1>Image {{ set.obs_id }}</h1>
+    <h1>Image {{ set.name }}</h1>
     <p>Set: {{ set }}</p>
-    <p>Object: {{ set.object }}</p>
-    <p>Proposition: {{ set.prop_id }} - {{ set.title }}</p>
-    <p>Taken: {{ set.time_obs }}</p>
+    <p>Object: {{ set.header.object }}</p>
+    <p>Proposition: {{ set.header.prop_id }} - {{ set.header.title }}</p>
+    <p>Taken: {{ set.dt }}</p>
     <canvas width="1024" height="1024">
         The observation will go here. It is most likely rendering at the moment.
     </canvas>

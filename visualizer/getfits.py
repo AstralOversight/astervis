@@ -1,134 +1,185 @@
-from ftplib import FTP
+import ftputil
+# from ftplib import FTP
 import astropy.io.fits as FITS
-from visualizer.models import ObservationSet
+from visualizer.models import ObservationSet, ObsLocation, ObsHeader
 import time
+import datetime
 
-def get_set(id):
-    with FTP("data.asc-csa.gc.ca") as ftp:
-        ftp.login()
-        ftp.cwd("users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/2026/109/")
+STORED_LOCATION = "static/visualizer/obs/"
 
-        with open(id, 'wb') as fp:
-            ftp.retrbinary('RETR '+id, fp.write)
+class ObsType:
+    RAW = ".fits.gz"
+    COR = "_cor.fits.gz"
+    CORD = "_cord.fits.gz"
 
-        ftp.quit()
+class FileRef:
+    def __init__(self, domain:str, f_path:str, name:str):
+        self.domain = domain
+        self.f_path = f_path
+        self.name = name
 
-def all_for_day(year:int, day:int):
-    all = []
-    with FTP("data.asc-csa.gc.ca") as ftp:
-        ftp.login()
-        
-        all = day_list(ftp, year, day)
-        #no_type = [elem[:-8] for elem in all]
-        ftp.close()
-    raw = []
-    cor = []
-    cord = []
-    for elem in all:
-        if "_cord" in elem:
-            cord.append(elem)
-        elif "_cor" in elem:
-            cor.append(elem)
+    def __str__(self):
+        return "(" + self.f_path + " & " + self.base_name + ")"
+
+
+class FileSet:
+    def __init__(self, domain:str, f_path:str, base_name:str, raw:FileRef, cor:FileRef, cord:FileRef):
+        self.domain = domain
+        self.f_path = f_path
+        self.base_name = base_name
+        self.raw = raw
+        self.cor = cor
+        self.cord = cord
+    
+    def __str__(self):
+        hr = ("✅", "❌")[self.raw is None]
+        hc = ("✅", "❌")[self.cor is None]
+        hd = ("✅", "❌")[self.cord is None]
+        return "(" + self.f_path + " & " + self.base_name + " | R:" + hr + " C:" + hc + " D:" + hd + ")"
+    
+def all_from_site(domain:str, s_path:str):
+    with ftputil.FTPHost(domain, "anonymous", "") as ftp:
+        all_sets = get_from_path(ftp, domain, s_path)
+
+    save_sets(all_sets, domain, s_path)
+
+def get_from_path(ftp:ftputil.FTPHost, domain:str, f_path:str, wait_time=0.5):
+    # ftp.cwd(f_path)
+    print(f_path)
+    
+    filesets = []
+    files = []
+    for elem in ftp.listdir(f_path):
+        if (ftp.path.isdir(f_path+"/"+elem)):
+            time.sleep(wait_time)
+            filesets = filesets + get_from_path(ftp, domain, f_path+"/"+elem)
         else:
-            raw.append(elem)
-    
-    baseurl = "ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/"+year.__str__()+"/"+day.__str__()+"/"
-    no_dupes = []
+            files.append(FileRef(domain, f_path, elem))
 
-    for elem in raw:
-        has_cor = False
-        has_cord = False
-        for cor_elem in cor:
-            if elem[:-8] in cor_elem:
-                has_cor = True
-                cor.remove(cor_elem)
-                break
-        for cord_elem in cord:
-            if elem[:-8] in cord_elem:
-                has_cord = True
-                cord.remove(cord_elem)
-                break
+    return filesets + sort_into_sets(files)
 
-        no_dupes.append("|".join([elem, True.__str__(), has_cor.__str__(), has_cord.__str__()]))
-    
-    for elem in cor:
-        has_cord = False
-        for cord_elem in cord:
-            if elem[:-8] in cord_elem:
-                has_cord = True
-                cord.remove(cord_elem)
+def sort_into_sets(files):
+    sets = []
+    for f in files:
+        found = False
+        for s in sets:
+            if s.base_name in f.name:
+                found = True
+                if "_cord" in f.name:
+                    s.cord = f
+                elif "_cor" in f.name:
+                    s.cor = f
+                else:  # Raw.
+                    s.raw = f
                 break
         
-        no_dupes.append("|".join([elem, False.__str__(), True.__str__(), has_cord.__str__()]))
-    
-    for elem in cord:
-        no_dupes.append("|".join([elem, False.__str__(), False.__str__(), True.__str__()]))
-    
-    summary_str = "\n".join(no_dupes)
+        if not found:
+            if "_cord" in f.name:
+                fs = FileSet(f.domain, f.f_path, f.name[:-13], None, None, f)
+            elif "_cor" in f.name:
+                fs = FileSet(f.domain, f.f_path, f.name[:-12], None, f, None)
+            else:  # It's RAW
+                fs = FileSet(f.domain, f.f_path, f.name[:-8], f, None, None)
+            
+            sets.append(fs)
 
-    with open(year.__str__()+"-"+day.__str__()+".txt", "w") as file:
-       file.write(summary_str)
-    
-    get_remaining(year, day)
+    return sets
 
-def get_remaining(year:int, day:int, pausetime:int=30):
-    lines = []
-    with open(year.__str__()+"-"+day.__str__()+".txt", "r") as file:
-       lines = file.readlines()
+def save_sets(sets, domain:str, s_path:str):
+    for s in sets:
+        foundlocation = ObsLocation.objects.filter(domain=domain, s_path=s_path).first()
+        if foundlocation is None:
+            foundlocation = ObsLocation(domain=domain, s_path=s_path)
+            foundlocation.save()
 
-    while len(lines) > 0:
-        line = (lines.pop()).split("|")
+        strtime = s.base_name.split("_")[2]
+        obstime = datetime.datetime(year=int(strtime[0:4]), month=1, day=1) + datetime.timedelta(days=int(strtime[4:7])-1, seconds=int(strtime[11:]), hours=int(strtime[7:9]), minutes=int(strtime[9:11]))
+        r = (True, False)[s.raw is None]
+        c = (True, False)[s.cor is None]
+        d = (True, False)[s.cord is None]
+        # If set with name already exists, overwrite it?
+        obset = ObservationSet(
+            name=s.base_name,
+            location=foundlocation,
+            f_path=s.f_path,
+            dt=obstime,
+            saved=False,
+            raw=r,
+            cor=c,
+            cord=d,
+            header=None
+        )
+        obset.save()
 
-        present:bool = False
+def prep_file(set:ObservationSet, type:ObsType, overwrite:bool=False): # ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/2026/109/NEOS_SCI_2026109004941_cord.fits.gz
+    present = False
+    try:
+        with open(STORED_LOCATION + set.name + type) as file:
+            present = True
+    except:
+        present = False
+        set.saved = True
 
-        for elem in ObservationSet.objects.filter(year__exact=year, day__exact=day):
-            if line[0] in elem.obs_id:
-                present = True
-                break
-
-        if not present:
-            print("Observation '"+line[0]+"': ", end="")
-            save_header("ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/"+year.__str__()+"/"+day.__str__()+"/"+line[0],
-                        year, day, 'True' in line[1], 'True' in line[2], 'True' in line[3])
-            print("Recorded!")
-        else:
-            print("Observation '"+line[0]+"' already recorded! Skipping.")
+    if overwrite or not present:
+        with ftputil.FTPHost(set.location.domain, "anonymous", "") as ftp:
+            ftp.download(set.f_path + "/" + set.name + type, STORED_LOCATION + set.name + type)
         
-        with open(year.__str__()+"-"+day.__str__()+".txt", "w") as file:
-            file.write("".join(lines))
-        
-        time.sleep(pausetime)
-    
+        with FITS.open(STORED_LOCATION + set.name + type, use_fsspec=True, memmap=False) as hdul:
+            header = hdul[0].header
+        obs = create_header(header)
+        obs.save()
+        set.saved = True
 
-
-def day_list(ftp:FTP, year:int, day:int):
-    ftp.cwd("users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/"+year.__str__()+"/"+day.__str__()+"/")
-    return ftp.nlst()
-
-# def read_header(url): # ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/2026/109/NEOS_SCI_2026109004941_cord.fits.gz
-#     with FITS.open(url, use_fsspec=True, memmap=False) as hdul:
-#         with open(hdul[0].header['OBS_ID']+".txt", "w") as f:
-#             head = hdul[0].header.__str__()
-#             chnk = [ head[i:i+80] for i in range(0, len(head), 80) ]
-#             f.write("\n".join(chnk))
-
-def save_header(url, year:int, day:int, has_raw:bool, has_cor:bool, has_cord:bool): # ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/2026/109/NEOS_SCI_2026109004941_cord.fits.gz
-    with FITS.open(url, use_fsspec=True, memmap=False) as hdul:
-        header = hdul[0].header # FITS.getheader(url, use_fsspec=True, ext=0)
-    obs = create_observation(header, year, day, has_raw, has_cor, has_cord, False)
-    obs.save()
-
-def create_observation(header, year:int, day:int, has_raw:bool=True, has_cor:bool=False, has_cord:bool=False, has_clean:bool=False):
-    return ObservationSet(
+def create_header(header):
+    return ObsHeader(
+        bitpix = header['BITPIX'],
+        naxis = header['NAXIS'],
+        naxis1 = header['NAXIS1'],
+        naxis2 = header['NAXIS2'],
+        extend = header['EXTEND'],
+        bscale = header['BSCALE'],
+        bzero = header['BZERO'],
+        # Image
+        biassec = header['BIASSEC'],
+        trimsec = header['TRIMSEC'],
+        datasec = header['DATASEC'],
+        ccdsec = header['CCDSEC'],
+        gain = header['GAIN'],
+        rdnoise = header['RDNOISE'],
+        filter = header['FILTER'],
+        waveleng = header['WAVELENG'],
+        bandpass = header['BANDPASS'],
         xbinning = header['XBINNING'],
         ybinning = header['YBINNING'],
+        compr_al = header['COMPR_AL'],
+        comp_set = header['COMP_SET'],
+        n_subimg = header['N_SUBIMG'],
+        overscan = header['OVERSCAN'],
         creator = header['CREATOR'],
         telescop = header['TELESCOP'],
+        shutter = header['SHUTTER'],
+        shut_age = header['SHUT_AGE'],
+        detector = header['DETECTOR'],
+        # Timing
+        timesys = header['TIMESYS'],
         exposure = header['EXPOSURE'],
         aexptime = header['AEXPTIME'],
         rexptime = header['REXPTIME'],
         date_obs = header['DATE-OBS'],
         time_obs = header['TIME-OBS'],
+        r_exp_s = header['R_EXP_S'],
+        a_exp_s = header['A_EXP_S'],
+        len_flu = header['LEN_FLU'],
+        len_tran = header['LEN_TRAN'],
+        len_read = header['LEN_READ'],
+        len_proc = header['LEN_PROC'],
+        lendelay = header['LENDELAY'],
+        len_save = header['LEN_SAVE'],
+        # Pointing
+        equinox = header['EQUINOX'],
+        mode = header['MODE'],
+        modetime = header['MODETIME'],
+        cmd = header['CMD'],
         cmdra = header['CMDRA'],
         cmddec = header['CMDDEC'],
         cmdrol = header['CMDROL'],
@@ -146,35 +197,35 @@ def create_observation(header, year:int, day:int, has_raw:bool=True, has_cor:boo
         ela_ang = header['ELA_ANG'],
         sun_min = header['SUN_MIN'],
         sun_max = header['SUN_MAX'],
+        hist_nb = header['HIST_NB'],
+        avg_vel = header['AVG_VEL'],
+        ra_vel = header['RA_VEL'],
+        dec_vel = header['DEC_VEL'],
+        rol_vel = header['ROL_VEL'],
+        # Environment Data
         temp_ccd = header['TEMP_CCD'],
+        ccdt_nb = header['CCDT_NB'],
+        temp_roe = header['TEMP_ROE'],
+        temp_amp = header['TEMP_AMP'],
+        temp_pld = header['TEMP_PLD'],
+        # Mission Planning Section
         object = header['OBJECT'],
         observer = header['OBSERVER'],
         intent = header['INTENT'],
         instrume = header['INSTRUME'],
         targtype = header['TARGTYPE'],
         prop_id = header['PROP_ID'],
+        pi_name = header['PI_NAME'],
         title = header['TITLE'],
         moving = header['MOVING'],
+        m2 = header['M2'],
         geo_lat = header['GEO_LAT'],
         geo_long = header['GEO_LONG'],
+        # Diagnostic
         imgstate = header['IMGSTATE'],
+        # Calibration
         archive = header['ARCHIVE'],
         obs_type = header['OBSTYPE'],
         obs_id = header['OBS_ID'],
-        year = year,
-        day = day,
-        raw = has_raw,
-        cor = has_cor,
-        cord = has_cord,
-        clean = has_clean
     )
-
-def save_file(base, path, file): # ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/2026/109/NEOS_SCI_2026109004941_cord.fits.gz
-    with FTP(base) as ftp:
-        ftp.login()
-        ftp.cwd(path)
-
-        with open("static/visualizer/stored_observations/"+file, 'wb') as fp:
-            ftp.retrbinary('RETR '+file, fp.write)
-
-        ftp.quit()
+        

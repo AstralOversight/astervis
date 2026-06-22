@@ -121,7 +121,7 @@ def page(request):
             
             search += searches[type][comp].format(param=param, value=value)
     
-    sql = "SELECT id, obs_id FROM visualizer_observationset"
+    sql = "SELECT id, name FROM visualizer_observationset"
     if search:
         sql += " WHERE " + search
 
