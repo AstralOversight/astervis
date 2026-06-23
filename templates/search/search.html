@@ -108,7 +108,7 @@
                 else newPage = 1;
             }
 
-            var newURL = "/search?page="+newPage;
+            var newURL = "{% url 'search-base' %}?page="+newPage;
             var filters = document.getElementsByName("filter-value");
             filters.forEach(filter => {
                 field = filter.nextElementSibling.nextElementSibling;

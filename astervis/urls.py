@@ -21,11 +21,9 @@ from django.contrib import admin
 from django.urls import include, path
 from . import views
 
-base = "app/FEWPM/"# settings.FORCE_SCRIPT_NAME
-
 urlpatterns = [
-    path(base+"", views.page, name="home"),
-    path(base+"search/", include("search.urls")),
-    path(base+"visualizer/", include("visualizer.urls")),
-    path(base+"admin/", admin.site.urls),
+    path("", views.page, name="home"),
+    path("search/", include("search.urls")),
+    path("visualizer/", include("visualizer.urls")),
+    path("admin/", admin.site.urls),
 ] + static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS)
