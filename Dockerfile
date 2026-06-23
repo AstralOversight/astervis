@@ -12,3 +12,9 @@ WORKDIR /workspaces/astervis
 # Install dependencies
 COPY ./requirements.txt .
 RUN python -m pip install -r requirements.txt
+
+# Run the thing
+COPY . .
+EXPOSE 80
+# FIXME: It's not running `python manage.py migrate` right now
+CMD ["python", "manage.py", "runserver", "0.0.0.0:80"]

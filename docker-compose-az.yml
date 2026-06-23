@@ -4,7 +4,6 @@ services:
     image: ghcr.io/astraloversight/astervis:latest
     ports:
       - "80:80"
-    command: /bin/bash entry-point.sh
     # volumes:
       # - astervis:/code
   #   depends_on:

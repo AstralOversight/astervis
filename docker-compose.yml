@@ -4,8 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - ${DJANGO_PORT}:${DJANGO_PORT}
-    command: /bin/bash entry-point.sh
+      - 80:80
     volumes:
       - .:/workspaces/astervis
     depends_on:
