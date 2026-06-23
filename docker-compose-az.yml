@@ -5,8 +5,8 @@ services:
     ports:
       - "8000:8000"
     command: /bin/bash entry-point.sh
-    volumes:
-      - astervis:/code
+    # volumes:
+      # - astervis:/code
   #   depends_on:
   #     - db
   # db:
@@ -16,6 +16,6 @@ services:
   #   environment:
   #     - "POSTGRES_HOST_AUTH_METHOD=trust"
 
-volumes:
+# volumes:
   # postgres-data:
-  astervis:
+  # astervis:
