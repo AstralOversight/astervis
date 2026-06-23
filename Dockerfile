@@ -16,5 +16,6 @@ RUN python -m pip install -r requirements.txt
 # Run the thing
 COPY . .
 EXPOSE 80
-CMD python ./manage.py migrate --noinput && gunicorn astervis.wsgi:application
+CMD gunicorn astervis.wsgi:application
+# CMD python ./manage.py migrate --noinput && gunicorn astervis.wsgi:application
 # ["python", "./manage.py", "runserver", "0.0.0.0:80"]
