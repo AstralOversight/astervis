@@ -27,6 +27,7 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 DEBUG = bool(os.environ.get("DJANGO_DEBUG", default=0))
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS","127.0.0.1").split(",")
+CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS
 
 FORCE_SCRIPT_NAME = os.environ.get("DJANGO_BASE_URL","")
 
