@@ -22,8 +22,8 @@ from django.urls import include, path
 from . import views
 
 urlpatterns = [
-    path("", views.page, name="home"),
-    path("search/", include("search.urls")),
-    path("visualizer/", include("visualizer.urls")),
-    path("admin/", admin.site.urls),
+    path(f'', views.page, name="home"),
+    path(f'search/', include("search.urls")),
+    path(f'visualizer/', include("visualizer.urls")),
+    path(f'admin/', admin.site.urls),
 ] + static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS)
