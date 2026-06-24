@@ -7,7 +7,7 @@ class ObsLocation(models.Model):
     s_path = models.TextField()
 
     def __str__(self):
-        return "(" + self.domain + "/" + self.s_path + ")"
+        return self.domain + "/" + self.s_path
 
 class ObsHeader(models.Model):
     bitpix = models.IntegerField()
@@ -111,7 +111,7 @@ class ObsHeader(models.Model):
 
 class ObservationSet(models.Model):
     name = models.TextField()
-    location = models.ForeignKey(ObsLocation, on_delete=models.PROTECT)
+    location = models.ForeignKey(ObsLocation, on_delete=models.CASCADE)
     f_path = models.TextField()
     dt = models.DateTimeField()
     saved = models.BooleanField()

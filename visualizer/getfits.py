@@ -1,6 +1,7 @@
 import ftputil
 # from ftplib import FTP
 import astropy.io.fits as FITS
+from django.db.models import signals
 from visualizer.models import ObservationSet, ObsLocation, ObsHeader
 import time
 import datetime
@@ -36,17 +37,21 @@ class FileSet:
         hc = ("✅", "❌")[self.cor is None]
         hd = ("✅", "❌")[self.cord is None]
         return "(" + self.f_path + " & " + self.base_name + " | R:" + hr + " C:" + hc + " D:" + hd + ")"
-    
-def all_from_site(domain:str, s_path:str):
-    with ftputil.FTPHost(domain, "anonymous", "") as ftp:
-        all_sets = get_from_path(ftp, domain, s_path)
 
-    save_sets(all_sets, domain, s_path)
+
+def on_location_added(sender, instance, created, **kwargs):
+    if created: all_from_site(instance)
+signals.post_save.connect(on_location_added, sender=ObsLocation)
+
+def all_from_site(location:ObsLocation):
+    print("Location requested: "+location.__str__())
+    with ftputil.FTPHost(location.domain, "anonymous", "") as ftp:
+        all_sets = get_from_path(ftp, location.domain, location.s_path)
+
+    save_sets(all_sets, location)
 
 def get_from_path(ftp:ftputil.FTPHost, domain:str, f_path:str, wait_time=0.5):
-    # ftp.cwd(f_path)
     print(f_path)
-    
     filesets = []
     files = []
     for elem in ftp.listdir(f_path):
@@ -85,13 +90,8 @@ def sort_into_sets(files):
 
     return sets
 
-def save_sets(sets, domain:str, s_path:str):
+def save_sets(sets, location:ObsLocation):
     for s in sets:
-        foundlocation = ObsLocation.objects.filter(domain=domain, s_path=s_path).first()
-        if foundlocation is None:
-            foundlocation = ObsLocation(domain=domain, s_path=s_path)
-            foundlocation.save()
-
         strtime = s.base_name.split("_")[2]
         obstime = datetime.datetime(year=int(strtime[0:4]), month=1, day=1) + datetime.timedelta(days=int(strtime[4:7])-1, seconds=int(strtime[11:]), hours=int(strtime[7:9]), minutes=int(strtime[9:11]))
         r = (True, False)[s.raw is None]
@@ -100,7 +100,7 @@ def save_sets(sets, domain:str, s_path:str):
         # If set with name already exists, overwrite it?
         obset = ObservationSet(
             name=s.base_name,
-            location=foundlocation,
+            location=location,
             f_path=s.f_path,
             dt=obstime,
             saved=False,
