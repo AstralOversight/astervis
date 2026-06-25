@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
     ports:
       - 80:80
+    command: /bin/bash entrypoint.sh
     volumes:
       - .:/workspaces/astervis
     depends_on:
