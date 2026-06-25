@@ -27,7 +27,7 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 DEBUG = bool(os.environ.get("DJANGO_DEBUG", default=0))
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS","127.0.0.1").split(",")
-CSRF_TRUSTED_ORIGINS = ALLOWED_HOSTS
+CSRF_TRUSTED_ORIGINS = (f'https://{i}' for i in ALLOWED_HOSTS)
 
 FORCE_SCRIPT_NAME = os.environ.get("DJANGO_BASE_URL","")
 
@@ -122,6 +122,8 @@ USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
+
+STATIC_ROOT = os.path.join(BASE_DIR,'static/')
 
 STATIC_URL = os.environ.get("DJANGO_BASE_URL","") + "static/"# FORCE_SCRIPT_NAME + "static/"
 
