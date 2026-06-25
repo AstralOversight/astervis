@@ -3,6 +3,7 @@ import ftputil
 import astropy.io.fits as FITS
 from django.db.models import signals
 from visualizer.models import ObservationSet, ObsLocation, ObsHeader
+import threading
 import time
 import datetime
 
@@ -40,7 +41,7 @@ class FileSet:
 
 
 def on_location_added(sender, instance, created, **kwargs):
-    if created: all_from_site(instance)
+    if created: threading.Thread(target=all_from_site, args=(instance,)).start()
 signals.post_save.connect(on_location_added, sender=ObsLocation)
 
 def all_from_site(location:ObsLocation):
