@@ -28,7 +28,7 @@ urlpatterns = [
     path(f'search/', include("search.urls")),
     path(f'visualizer/', include("visualizer.urls")),
     path(f'admin/', admin.site.urls),
-] + static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS)
+] + static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS)  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 # Apparently here is the "reccomended" position for code that I want to run on startup
 # If a name and password are provided, and there are no pre-existing superusers, create the default one.

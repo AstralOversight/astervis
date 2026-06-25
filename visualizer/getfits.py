@@ -1,5 +1,4 @@
 import ftputil
-# from ftplib import FTP
 import astropy.io.fits as FITS
 from django.db.models import signals
 from visualizer.models import ObservationSet, ObsLocation, ObsHeader
@@ -7,7 +6,7 @@ import threading
 import time
 import datetime
 
-STORED_LOCATION = "static/visualizer/obs/"
+STORED_LOCATION = "media/obs/"
 
 class ObsType:
     RAW = ".fits.gz"

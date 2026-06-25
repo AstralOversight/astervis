@@ -46,6 +46,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -123,11 +124,16 @@ USE_TZ = False
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_ROOT = os.path.join(BASE_DIR,'static_media/')
+STATIC_ROOT = os.path.join(BASE_DIR,'staticfiles/')
 
-STATIC_URL = os.environ.get("DJANGO_BASE_URL","") + "static/"# FORCE_SCRIPT_NAME + "static/"
+STATIC_URL = FORCE_SCRIPT_NAME + "static/"
 
 STATICFILES_DIRS = (
     'static/',
     os.path.join(BASE_DIR, 'static/'),
 )
+
+# Media files.
+# Mentioned here https://docs.djangoproject.com/en/6.0/topics/files/
+MEDIA_ROOT = os.path.join(BASE_DIR,'media/')
+MEDIA_URL = FORCE_SCRIPT_NAME + "media/"
