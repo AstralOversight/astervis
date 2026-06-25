@@ -18,13 +18,21 @@ Including another URLconf
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
+from django.contrib.auth.models import User
 from django.urls import include, path
+from os import environ
 from . import views
 
 urlpatterns = [
     path(f'', views.page, name="home"),
-    # path(f'initsetup/', views.setup, name="home"),
     path(f'search/', include("search.urls")),
     path(f'visualizer/', include("visualizer.urls")),
     path(f'admin/', admin.site.urls),
 ] + static(settings.STATIC_URL, document_root=settings.STATICFILES_DIRS)
+
+# Apparently here is the "reccomended" position for code that I want to run on startup
+# If a name and password are provided, and there are no pre-existing superusers, create the default one.
+name = environ.get("DJANGO_SUPERUSER_NAME","")
+pword = environ.get("DJANGO_SUPERUSER_PWORD","")
+if name and pword and not User.objects.all():
+    User.objects.create_superuser(name, None, pword).save()
