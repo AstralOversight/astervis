@@ -121,7 +121,7 @@ class ObservationSet(models.Model):
     header = models.ForeignKey(ObsHeader, null=True, on_delete=models.SET_NULL)
 
     def __str__(self):
-        sigil = ("✴️", "✅")[self.saved]
+        sigil = ("✴️", "✅")[self.header is not None]
         r = (sigil, "❌")[self.raw is None or self.raw is False]
         c = (sigil, "❌")[self.cor is None or self.cor is False]
         d = (sigil, "❌")[self.cord is None or self.cord is False]

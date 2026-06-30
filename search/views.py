@@ -123,7 +123,7 @@ def page(request):
     
     sql = "SELECT id, name FROM visualizer_observationset"
     if search:
-        sql += " WHERE " + search
+        sql += " WHERE " + search + " ORDER BY dt ASC"
 
     obss = ObservationSet.objects.raw(sql)
 

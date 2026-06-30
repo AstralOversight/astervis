@@ -11,8 +11,10 @@
     </canvas>
     {% load static %}
     <script src="{% static 'visualizer/fits.js' %}" type="text/javascript" charset="utf-8"></script>
+    <script src="https://code.jquery.com/jquery-4.0.0.min.js"></script>
     <script type="text/javascript">
         var FITS = astro.FITS;
+        var imgSource = "";
 
         const rawmap = {};
 
@@ -127,11 +129,28 @@
         }
 
         function reload() {
-            var url = "{{location|escapejs}}";
-            var fits = new FITS(url, callback);
+            if (imgSource) {
+                //var file = fetch(imgSource).then(r => r.blob())
+                console.log("reload");
+                var fits = new FITS(imgSource, callback);
+            } else {
+                console.log("Tried to refresh without an image source.");
+            }
         }
 
-        reload();
+        $.ajax({
+            url: 'get/',
+            type: 'GET',
+            cache: true,
+            success: function (data) {
+                var blob = new Blob([data], {type:"application/octet-stream"});
+
+                imgSource = blob;//URL.createObjectURL(blob);//"http://localhost/media/obs/NEOS_SCI_2026109114040.fits.gz"//blob
+                console.log(imgSource);
+
+                reload()
+            },
+        })
     </script>
     <div>
         <input type="number" id="dark" min="0" max="2000" value="1000" onclick="reload()"/>

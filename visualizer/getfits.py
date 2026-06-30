@@ -1,6 +1,7 @@
 import ftputil
 import astropy.io.fits as FITS
 from django.db.models import signals
+from io import BytesIO
 from visualizer.models import ObservationSet, ObsLocation, ObsHeader
 import threading
 import time
@@ -118,18 +119,30 @@ def prep_file(set:ObservationSet, type:ObsType, overwrite:bool=False): # ftp://d
             present = True
     except:
         present = False
-        set.saved = True
 
     if overwrite or not present:
         with ftputil.FTPHost(set.location.domain, "anonymous", "") as ftp:
             ftp.download(set.f_path + "/" + set.name + type, STORED_LOCATION + set.name + type)
         
+    # if overwrite or set.header is None: # Try to get first
         with FITS.open(STORED_LOCATION + set.name + type, use_fsspec=True, memmap=False) as hdul:
             header = hdul[0].header
         obs = create_header(header)
         obs.save()
         set.header = obs
-        set.saved = True
+    
+    set.saved = True
+    set.save()
+
+def stream_file(set:ObservationSet, type:ObsType) -> BytesIO:
+    # Commented out stuff is the actual one, this is mainly a test right now.
+    # with ftputil.FTPHost(set.location.domain, "anonymous", "") as ftp:
+    #     with ftp.open(set.f_path + "/" + set.name + type, mode="rb") as ftp_file:
+    #         fs = BytesIO(ftp_file.read())
+    with open(STORED_LOCATION + "/NEOS_SCI_2026109114040.fits.gz", mode="rb") as f:
+        fs = BytesIO(f.read())
+    fs.seek(0)
+    return fs
 
 def create_header(header):
     return ObsHeader(
