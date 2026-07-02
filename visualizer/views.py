@@ -1,5 +1,7 @@
 from django.http import FileResponse
 from django.shortcuts import render, get_object_or_404
+import ftputil
+from mimetypes import guess_type
 from visualizer.models import ObservationSet
 from visualizer import getfits
 
@@ -16,8 +18,10 @@ def set(request, obs_name):
 
 def get(request, obs_name):
     obs_set = get_object_or_404(ObservationSet, name=obs_name)
-    # r = requests.get(url, stream=True)
-    response = FileResponse(getfits.stream_file(obs_set, getfits.ObsType.RAW), filename="NEOS_SCI_2026109114040.fits.gz")
-    filename = "NEOS_SCI_2026109114040.fits.gz" # should be changed to actual name later.
-    # response['Content-Disposition'] = f'attachement; filename={filename}'
+    obs_type = getfits.ObsType.RAW
+    content_type, encoding = guess_type(obs_set.name + obs_type)
+    content_type = content_type or "application/octet-stream"
+    response = FileResponse(getfits.stream_file(obs_set, obs_type), content_type=content_type)
+    if encoding:
+        response.headers["Content-Encoding"] = encoding
     return response

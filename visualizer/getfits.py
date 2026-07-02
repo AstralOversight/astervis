@@ -134,13 +134,10 @@ def prep_file(set:ObservationSet, type:ObsType, overwrite:bool=False): # ftp://d
     set.saved = True
     set.save()
 
-def stream_file(set:ObservationSet, type:ObsType) -> BytesIO:
-    # Commented out stuff is the actual one, this is mainly a test right now.
-    # with ftputil.FTPHost(set.location.domain, "anonymous", "") as ftp:
-    #     with ftp.open(set.f_path + "/" + set.name + type, mode="rb") as ftp_file:
-    #         fs = BytesIO(ftp_file.read())
-    with open(STORED_LOCATION + "/NEOS_SCI_2026109114040.fits.gz", mode="rb") as f:
-        fs = BytesIO(f.read())
+def stream_file(obs_set:ObservationSet, obs_type:ObsType) -> BytesIO:
+    with ftputil.FTPHost(obs_set.location.domain, "anonymous", "") as ftp:
+        with ftp.open(obs_set.f_path + "/" + obs_set.name + obs_type, mode="rb") as ftp_file:
+            fs = BytesIO(ftp_file.read())
     fs.seek(0)
     return fs
 
