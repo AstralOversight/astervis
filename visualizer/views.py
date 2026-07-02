@@ -13,7 +13,7 @@ def set(request, obs_name):
     obs_set.refresh_from_db()
     
     context = {"set": obs_set,
-               "location": "/" + getfits.STORED_LOCATION + obs_set.name + ".fits.gz",}
+               "location": request.path_info + "get/",}
     return render(request, "visualizer/display.html", context)
 
 def get(request, obs_name):

@@ -132,8 +132,3 @@ STATICFILES_DIRS = (
     'static/',
     os.path.join(BASE_DIR, 'static/'),
 )
-
-# Media files.
-# Mentioned here https://docs.djangoproject.com/en/6.0/topics/files/
-MEDIA_ROOT = os.path.join(BASE_DIR,'media/')
-MEDIA_URL = FORCE_SCRIPT_NAME + "media/"

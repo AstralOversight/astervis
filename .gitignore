@@ -4,8 +4,5 @@ astervis/__pycache__
 # The static files generated for the server.
 staticfiles
 
-# Stored observations
-media/obs/*
-
 # Yeah, I'm not sharing this
 .env

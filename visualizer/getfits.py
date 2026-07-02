@@ -7,8 +7,6 @@ import threading
 import time
 import datetime
 
-STORED_LOCATION = "media/obs/"
-
 class ObsType:
     RAW = ".fits.gz"
     COR = "_cor.fits.gz"
@@ -112,27 +110,14 @@ def save_sets(sets, location:ObsLocation):
         )
         obset.save()
 
-def prep_file(set:ObservationSet, type:ObsType, overwrite:bool=False): # ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/2026/109/NEOS_SCI_2026109004941_cord.fits.gz
-    present = False
-    try:
-        with open(STORED_LOCATION + set.name + type) as file:
-            present = True
-    except:
-        present = False
-
-    if overwrite or not present:
-        with ftputil.FTPHost(set.location.domain, "anonymous", "") as ftp:
-            ftp.download(set.f_path + "/" + set.name + type, STORED_LOCATION + set.name + type)
-        
-    # if overwrite or set.header is None: # Try to get first
-        with FITS.open(STORED_LOCATION + set.name + type, use_fsspec=True, memmap=False) as hdul:
+def prep_file(obs_set:ObservationSet, obs_type:ObsType, overwrite:bool=False): # ftp://data.asc-csa.gc.ca/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/2026/109/NEOS_SCI_2026109004941_cord.fits.gz
+    if not obs_set.header:
+        with FITS.open("ftp://" + obs_set.location.domain + obs_set.f_path + "/" + obs_set.name + obs_type, use_fsspec=True, memmap=False) as hdul:
             header = hdul[0].header
         obs = create_header(header)
         obs.save()
-        set.header = obs
-    
-    set.saved = True
-    set.save()
+        obs_set.header = obs
+        obs_set.save()
 
 def stream_file(obs_set:ObservationSet, obs_type:ObsType) -> BytesIO:
     with ftputil.FTPHost(obs_set.location.domain, "anonymous", "") as ftp:
@@ -141,7 +126,7 @@ def stream_file(obs_set:ObservationSet, obs_type:ObsType) -> BytesIO:
     fs.seek(0)
     return fs
 
-def create_header(header):
+def create_header(header) -> ObsHeader:
     return ObsHeader(
         bitpix = header['BITPIX'],
         naxis = header['NAXIS'],
