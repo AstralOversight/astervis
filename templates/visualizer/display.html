@@ -7,7 +7,7 @@
     <p>Proposition: {{ set.header.prop_id }} - {{ set.header.title }}</p>
     <p>Taken: {{ set.dt }}</p>
     <p>Viewing: <select name='obs-sel' id='obs-sel' onchange='changeObs()'></select></p>
-    <canvas width="1024" height="1024">
+    <canvas id="obsspace" width="1024" height="1024">
         The observation will go here. It is most likely rendering at the moment.
     </canvas>
     {% load static %}
@@ -17,17 +17,18 @@
         var FITS = astro.FITS;
         var imgSource = "";
         var curObs = "";
+        var mapMin = 0;
 
         const params = new URLSearchParams(document.location.search);
         const rawmap = {};
 
         var summap = function(map, value) {
-            if (map[value]) map[value] = map[value]+1;
-            else map[value] = 1;
+            if (map[parseInt(value) - mapMin]) map[parseInt(value) - mapMin] = map[parseInt(value) - mapMin]+1;
+            else map[parseInt(value) - mapMin] = 1;
         }
 
         var callback = function() {
-            const canvas = document.querySelector("canvas");
+            const canvas = document.getElementById("obsspace");
             const ctx = canvas.getContext("2d");
             const dark_range = document.getElementById("dark");
             const light_range = document.getElementById("light");
@@ -37,6 +38,8 @@
 
             const width = header.get('NAXIS1'); // get image width
             const height = header.get('NAXIS2'); // get image height
+            canvas.width = width;
+            canvas.height = height;
 
             curObs = header.get('PRODUCT');
 
@@ -46,6 +49,7 @@
                 //Due to the side full of black and white pixels, this is kinda broken
                 // On further inspection, they're not actually fully black???
                 var totminmax = FITS.ImageUtils.getExtent(pixels);
+                mapMin = totminmax[0];
                 dark_range.min = totminmax[0];
                 dark_range.max = totminmax[1];
                 light_range.min = totminmax[0];
@@ -110,13 +114,13 @@
             for (let i = 0; i < values.length; i++) {
                 ctx.lineTo(i*canvas.width/values.length, canvas.height-(values[i][1]*(canvas.height-buffer)/max)-buffer);
                 // Current level text & tick
-                if (i % Math.floor(2*values.length/tickCount) == 0) ctx.fillText((values[i][0]), (i*canvas.width/values.length)+2, canvas.height-1)
-                if (i % Math.floor(2*values.length/tickCount) == Math.floor(values.length/tickCount)) ctx.fillText((values[i][0]), (i*canvas.width/values.length)+2, canvas.height-11)
+                if (i % Math.floor(2*values.length/tickCount) == 0) ctx.fillText(parseInt(values[i][0])+mapMin, (i*canvas.width/values.length)+2, canvas.height-1)
+                if (i % Math.floor(2*values.length/tickCount) == Math.floor(values.length/tickCount)) ctx.fillText(parseInt(values[i][0])+mapMin, (i*canvas.width/values.length)+2, canvas.height-11)
                 if (i % Math.floor(values.length/tickCount) == 0) ctx.fillRect(i*canvas.width/values.length, canvas.height-buffer, 1, buffer);
 
                 // Add to queue the bars for the dark & light zones.
-                if (i+1 < values.length && ((values[i][0] <= parseInt(dark_range.value+minimum) && values[i+1][0] > parseInt(dark_range.value+minimum))
-                                        || (values[i][0] <= parseInt(light_range.value+minimum) && values[i+1][0] > parseInt(light_range.value+minimum)))) {
+                if (i+1 < values.length && ((values[i][0]+mapMin <= parseInt(dark_range.value+minimum) && values[i+1][0]+mapMin > parseInt(dark_range.value+minimum))
+                                        || (values[i][0]+mapMin <= parseInt(light_range.value+minimum) && values[i+1][0]+mapMin > parseInt(light_range.value+minimum)))) {
                     queue.push(i*canvas.width/values.length);
                     // console.log(values[i][0], values[i+1][0], dark_range.value, light_range.value,
                     // (values[i][0] <= dark_range.value && values[i+1][0] > dark_range.value),
@@ -178,7 +182,7 @@
         }
     </script>
     <div>
-        <input type="number" id="dark" min="0" max="2000" value="1000" onclick="reload()"/>
+        <input type="number" id="dark" min="0" max="2000" value="0" onclick="reload()"/>
         <label for="dark">Black value.</label>
     </div>
     <div>
