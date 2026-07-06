@@ -137,6 +137,7 @@ def page(request):
 
     context = {"observation_list": obss[(pageN-1)*perPage:pageN*perPage],
                "fields": stringed,
-               "obs_len": obss.__len__,
-               "page": pageN,}
+               "obs_len": obss.__len__(),
+               "page": pageN,
+               "tot_pages": (obss.__len__() // perPage) + 1}
     return render(request, "search/search.html", context)
