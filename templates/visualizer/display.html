@@ -115,8 +115,8 @@
                 if (i % Math.floor(values.length/tickCount) == 0) ctx.fillRect(i*canvas.width/values.length, canvas.height-buffer, 1, buffer);
 
                 // Add to queue the bars for the dark & light zones.
-                if (i+1 < values.length && ((values[i][0] <= dark_range.value+minimum && values[i+1][0] > dark_range.value+minimum)
-                                        || (values[i][0] <= light_range.value+minimum && values[i+1][0] > light_range.value+minimum))) {
+                if (i+1 < values.length && ((values[i][0] <= parseInt(dark_range.value+minimum) && values[i+1][0] > parseInt(dark_range.value+minimum))
+                                        || (values[i][0] <= parseInt(light_range.value+minimum) && values[i+1][0] > parseInt(light_range.value+minimum)))) {
                     queue.push(i*canvas.width/values.length);
                     // console.log(values[i][0], values[i+1][0], dark_range.value, light_range.value,
                     // (values[i][0] <= dark_range.value && values[i+1][0] > dark_range.value),
