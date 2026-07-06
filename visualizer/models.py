@@ -114,7 +114,6 @@ class ObservationSet(models.Model):
     location = models.ForeignKey(ObsLocation, on_delete=models.CASCADE)
     f_path = models.TextField()
     dt = models.DateTimeField()
-    saved = models.BooleanField()
     raw = models.BooleanField()
     cor = models.BooleanField()
     cord = models.BooleanField()

@@ -9,7 +9,7 @@ from visualizer import getfits
 
 def set(request, obs_name):
     obs_set = get_object_or_404(ObservationSet, name=obs_name)
-    # getfits.prep_file(obs_set, getfits.ObsType.RAW)
+    getfits.prep_file(obs_set, getfits.ObsType.RAW)
     obs_set.refresh_from_db()
     
     context = {"set": obs_set,}
