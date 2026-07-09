@@ -85,10 +85,11 @@ DATABASES = {
         "USER": os.environ.get("DATABASE_USERNAME", default="postgres"),
         "PASSWORD": os.environ.get("DATABASE_PASSWORD", default="postgres"),
         "HOST": os.environ.get("DATABASE_HOST", default="db"),
-        "PORT": int(os.environ.get("DATABASE_PORT", default="5432")),
+        "PORT": os.environ.get("DATABASE_PORT", default="5432"),
     }
 }
 
+print("Connected to database port: " + os.environ.get("DATABASE_PORT", default="5432"))
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
