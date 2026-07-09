@@ -56,6 +56,7 @@
                     break
                 case 'b':
                     input += " type='checkbox'";
+                    if (value.substring(1).toLowerCase() == "true") {input += " checked";}
                     break
                 case 's':
                 default:
@@ -84,19 +85,23 @@
                     case "n":
                         field.setAttribute("type", "number");
                         field.removeAttribute("maxlength");
+                        field.value = "";
                         break
                     case "d":
                         field.setAttribute("type", "datetime-local");
                         field.removeAttribute("maxlength");
+                        field.value = "";
                         break
                     case "b":
                         field.setAttribute("type", "checkbox");
                         field.removeAttribute("maxlength");
+                        field.value = "";
                         break
                     case "s":
                     default:
                         field.setAttribute("type", "text");
                         field.setAttribute("maxlength", "32");
+                        field.value = "";
                 }
             });
         }
@@ -112,9 +117,15 @@
             var filters = document.getElementsByName("filter-value");
             filters.forEach(filter => {
                 field = filter.nextElementSibling.nextElementSibling;
-                if (field.value) newURL += "&" + encodeURIComponent(filter.value) +
-                                           "=" + encodeURIComponent(filter.nextElementSibling.value) +
-                                                 encodeURIComponent(field.value);
+                if (field.value) {
+                    newURL += "&" + encodeURIComponent(filter.value) +
+                              "=" + encodeURIComponent(filter.nextElementSibling.value) +
+                              encodeURIComponent(field.value);
+                } else if (field.getAttribute("type") == "checkbox") {
+                    newURL += "&" + encodeURIComponent(filter.value) +
+                              "=" + encodeURIComponent(filter.nextElementSibling.value) +
+                              encodeURIComponent(field.checked);
+                }
             });
             document.location.href = newURL;
         }

@@ -94,7 +94,7 @@ class ObsHeader(models.Model):
     targtype = models.CharField(max_length=8)
     prop_id = models.CharField(max_length=16)
     pi_name = models.CharField(max_length=32)
-    title = models.CharField(max_length=64)
+    title = models.CharField(max_length=128)
     moving = models.CharField(max_length=4)
     m2 = models.CharField(max_length=16)
     geo_lat = models.CharField(max_length=16)

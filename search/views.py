@@ -21,7 +21,7 @@ searches = [
         # Lesser
         "{param} LIKE '{value}'",
         # Exclude
-        "NOT ({param} LIKE '{value}')",
+        "NOT {param} LIKE '{value}'",
     ],
     # Number
     [
@@ -35,7 +35,7 @@ searches = [
         # Lesser
         "{param} < {value}",
         # Exclude
-        "NOT ({param} = {value})",
+        "NOT {param} = {value}",
     ],
     # Date
     [
@@ -49,7 +49,7 @@ searches = [
         # Lesser
         "{param} < '{value}'",
         # Exclude
-        "NOT ({param} = '{value}')",
+        "NOT {param} = '{value}'",
     ],
     # Bool
     [
@@ -63,7 +63,7 @@ searches = [
         # Lesser
         "{param} IS {value}",
         # Exclude
-        "NOT ({param} IS {value})",
+        "NOT {param} IS {value}",
     ],
 ]
 
@@ -75,7 +75,7 @@ def page(request):
     for field in ObservationSet._meta.get_fields():
         type = field
         match field.__class__:
-            case fields.IntegerField | fields.FloatField | fields.BigAutoField:
+            case fields.IntegerField | fields.FloatField | fields.BigAutoField | fields.BigIntegerField:
                 type = "n"
             case fields.DateTimeField:
                 type = "d"
@@ -95,14 +95,14 @@ def page(request):
             value = request.GET[param][1:]
             field = ObservationSet._meta.get_field(param)
             match field.__class__:
-                case fields.IntegerField | fields.FloatField | fields.BigAutoField:
+                case fields.IntegerField | fields.FloatField | fields.BigAutoField | fields.BigIntegerField:
                     type = 1
                 case fields.DateTimeField:
                     type = 2
                     value = " ".join(request.GET[param][1:].split("T"))
                 case fields.BooleanField:
                     type = 3
-                    value = "True" if request.GET[param][1:] == "on" else "False"
+                    value = "True" if (request.GET[param][1:] == "on" or request.GET[param][1:] == "true") else "False"
                 case fields.CharField | fields.TextField | _:
                     type = 0
             
