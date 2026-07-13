@@ -126,7 +126,7 @@ USE_TZ = False
 
 STATIC_ROOT = os.path.join(BASE_DIR,'staticfiles/')
 
-STATIC_URL = FORCE_SCRIPT_NAME + "static/"
+STATIC_URL = os.path.join(FORCE_SCRIPT_NAME, 'static/')
 
 STATICFILES_DIRS = (
     'static/',
