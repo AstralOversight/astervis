@@ -12,13 +12,16 @@
   <link rel="apple-touch-icon" href="{% static 'images/favicon.ico' %}">
   </head>
   <header>
-    <p>Welcome to Astervis</p>
-    <p>
-      <a href="{% url 'home' %}">Home</a> | <a href="{% url 'search-base' %}">Search</a>
-    <p>
+    <div class="header-box">
+      <img src="{% static 'images/favicon.ico' %}" alt="Astervis Logo" />
+      <div>Welcome to Astervis</div>
+      <div>
+        <a href="{% url 'home' %}">Home</a> | <a href="{% url 'search-base' %}">Search</a>
+      </div>
+    </div>
   </header>
   <hr></hr>
-  <body style="font-family: sans-serif;">
+  <body>
     {% block content %}
     {% endblock %}
   </body>
