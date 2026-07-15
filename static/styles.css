@@ -26,12 +26,16 @@ hr {
   border-style: inset;
 }
 
+canvas {
+  background-color: whitesmoke;
+}
+
 canvas,
 details,
 table {
+  border-radius: 5px;
   border: 10px solid darkslateblue;
   border-style: inset;
-  /* background-color: lavender; */
 }
 
 details table {
@@ -49,7 +53,7 @@ table {
 
 tbody > tr:nth-of-type(odd),
 details li:nth-of-type(odd) {
-  background-color: white;
+  background-color: whitesmoke;/*ghostwhite; lavenderblush; mintcream; lightcyan*/
 }
 
 thead,
@@ -67,10 +71,17 @@ td:last-of-type {
   text-align: center;
 }
 
-tfoot th {
-  text-align: right;
+tfoot {
+  th {
+    text-align: right;
+  }
+  td {
+    font-weight: bold;
+  }
 }
 
-tfoot td {
-  font-weight: bold;
+select, input {
+  border-radius: 5px;
+  border-color: darkslateblue;
+  background-color: lavender;
 }
