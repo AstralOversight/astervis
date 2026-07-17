@@ -1,15 +1,13 @@
 {% extends 'base.html' %}
 
 {% block content %}
+    <script>
+        const baseURL = "{% url 'search-base' %}";
+        const fieldGroups = JSON.parse('{{ fields|safe }}');
+        const opTypes = JSON.parse('{{ ops|safe }}');
+    </script>
     {% load static %}
     <script src="{% static 'visualizer/search.js' %}" type="text/javascript" charset="utf-8"></script>
-    <script>
-        const unprocessed = "{{ fields|safe }}";
-        const baseURL = "{% url 'search-base' %}";
-        unprocessed.split(",").forEach((value) => {
-            if (value) options.set(value.substring(1), [value.substring(1), value.substring(0,1)]);
-        })
-    </script>
     <h1>Search for observations</h1>
     <table>
         <thead>
@@ -18,7 +16,7 @@
             </tr>
             <tr>
                 <th scope="col">
-                    <details id="filter-expand">
+                    <details id="filter-expand" role="switch" alt="Search filter menu">
                         <summary>
                             Search Filters ⚙️
                         </summary>
@@ -57,7 +55,7 @@
                         {% endif %}
                     </div>
                     <div>
-                        <input type="number" id="page-select" min="1" max="{{ tot_pages }}" value="{{ page }}"/>
+                        <input type="number" id="page-select" min="1" max="{{ tot_pages }}" value="{{ page }}"  alt='Page selector'/>
                         <input type="button" onclick='gotoPage()' value="Go to page"></input>
                     </div>
                 </th>
@@ -76,7 +74,7 @@
                 </tr>
                 {% endfor %}
             {% else %}
-                <tr>No observations are available.</tr>
+                <tr><td>No observations are available.</td></tr>
             {% endif %}
         </tbody>
         <tfoot>
@@ -92,7 +90,7 @@
                         {% endif %}
                     </div>
                     <div>
-                        <input type="number" id="page-select" min="1" max="{{ tot_pages }}" value="{{ page }}"/>
+                        <input type="number" id="page-select" min="1" max="{{ tot_pages }}" value="{{ page }}"  alt='Page selector'/>
                         <input type="button" onclick='gotoPage()' value="Go to page"></input>
                     </div>
                 </th>

@@ -1,43 +1,58 @@
 const specialTerms = ["page"];
-// Arrays containing id, name, type (s:string, n:number, d:date)
-const options = new Map();
-const types = new Map();
-types.set("m", "Matches");
-types.set("c", "Contains");
-types.set("l", "Lesser than");
-types.set("g", "Greater than");
-types.set("e", "Excludes");
+
+// Returns the first element in the array with the desired id.
+function getFromId(array, id) {
+    for (let i = 0; i < array.length; i++) {
+        if (array[i].id == id) return array[i];
+    }
+}
+// Returns the first element in the array with the desired id(s). (seperated by '.')
+function chainGet(array, ids) {
+    idArr = ids.split('.');
+
+    var cur = array;
+    var element = null;
+
+    idArr.forEach(id => {
+        element = getFromId(cur, id);
+        if (element != null && element.values) cur = element.values;
+        else return;
+    });
+    return element;
+}
 
 function addFilter(selected, value) {
     var row = document.createElement("tr");
-    var select = "<select name='filter-value' id='filter-value' onchange='typeFields()'>";
-    var filterType = "<select name='filter-type' id='filter-type'>";
-    var selType = "";
+    var select = "<select name='filter-value' id='filter-value' onchange='typeFields()' alt='Field to filter'>";
+    var filterType = "<select name='filter-type' id='filter-type' alt='Method of filtering'>";
+    var input = "<input id='value' name='value' alt='Filter value'";
+    var selType = fieldGroups[0].values[0].type;
 
     // Create the options in the filter dropdown
-    options.forEach((settings, optionId) => {
-        // If an option was selected and it's this one, mark it as such
-        if (selected === optionId) {
-            select += "<option value='"+optionId+"' selected>"+settings[0]+"</option>";
-            selType = settings[1];
-        } else 
-        select += "<option value='"+optionId+"'>"+settings[0]+"</option>";
+    fieldGroups.forEach((group) => {
+        select += "<optgroup label='"+group.name+"'>";
+        group.values.forEach((option) => {
+            // If an option was selected and it's this one, mark it as such
+            if (selected === option.id) {
+                select += "<option value='"+group.id+"."+option.id+"' selected>"+option.id+"</option>";
+                selType = option.type;
+            } else select += "<option value='"+group.id+"."+option.id+"'>"+option.id+"</option>";
+        })
+        select += "</optgroup>";
     })
     select += "</select>";
 
     // Create the filter type dropdown
-    types.forEach((typeName, typeKey) => {
+    getFromId(opTypes, selType).values.forEach((operation) => {
         // If this type was selected
-        if (value && value.substring(0, 1) === typeKey) {
-            filterType += "<option value='"+typeKey+"' selected>"+typeName+"</option>";
-        } else 
-        filterType += "<option value='"+typeKey+"'>"+typeName+"</option>";
-    })
+        if (value && value.substring(0, 1) === operation.id) {
+            filterType += "<option value='"+operation.id+"' selected>"+operation.name+"</option>";
+        } else filterType += "<option value='"+operation.id+"'>"+operation.name+"</option>";
+    });
     filterType += "</select>";
 
-    // Create the input field and format it correctly.
-    var input = "<input id='value' name='value'";
-    switch (options.has(selected) ? options.get(selected)[1] : null) {
+    // Format the input field.
+    switch (selType) {
         case 'n':
             input += " type='number'";
             break
@@ -71,7 +86,8 @@ function typeFields() {
     var filters = document.getElementsByName("filter-value");
     filters.forEach(filter => {
         field = filter.nextElementSibling.nextElementSibling;
-        switch (options.get(filter.selectedOptions[0].value)[1]) {
+        var option = chainGet(fieldGroups, filter.selectedOptions[0].value);
+        switch (option.type) {
             case "n":
                 field.setAttribute("type", "number");
                 field.removeAttribute("maxlength");
@@ -93,6 +109,15 @@ function typeFields() {
                 field.setAttribute("maxlength", "32");
                 field.value = "";
         }
+
+        var filterType = document.createElement("select");
+        filter.setAttribute("name", "filter-type")
+        filter.setAttribute("id", "filter-type");
+        getFromId(opTypes, option.type).values.forEach((operation) => {
+            filterType.innerHTML += "<option value='"+operation.id+"'>"+operation.name+"</option>";
+        });
+
+        filter.nextElementSibling.replaceWith(filterType);
     });
 }
 
@@ -105,8 +130,10 @@ function search(newPage) {
 
     var newURL = baseURL+"?page="+newPage;
     var filters = document.getElementsByName("filter-value");
+    console.log(filters);
     filters.forEach(filter => {
         field = filter.nextElementSibling.nextElementSibling;
+        console.log(field.value);
         if (field.value) {
             newURL += "&" + encodeURIComponent(filter.value) +
                         "=" + encodeURIComponent(filter.nextElementSibling.value) +
