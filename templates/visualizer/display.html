@@ -6,8 +6,8 @@
     <p>Object: {{ set.header.object }}</p>
     <p>Proposition: {{ set.header.prop_id }} - {{ set.header.title }}</p>
     <p>Taken: {{ set.dt }}</p>
-    <p>Viewing: <select name='obs-sel' id='obs-sel' onchange='changeObs()'></select></p>
-    <canvas id="obsspace" width="1024" height="1024">
+    <p>Viewing: <select name='obs-sel' id='obs-sel' onchange='changeObs()' alt="Version switcher"></select></p>
+    <canvas id="obsspace" width="1024" height="1024" alt="Observation {{ set.name }}">
         The observation will go here. It is most likely rendering at the moment.
     </canvas>
     {% load static %}
@@ -70,7 +70,7 @@
     </div>
     <button onclick="reload()">Render</button>
     <div>
-        <canvas id="light-graph">A graph displaying the dispersion of the pixel light levels.</canvas>
+        <canvas id="light-graph" alt="Light graph">A graph displaying the dispersion of the pixel light levels.</canvas>
     </div>
     <details id="info">
         <summary>

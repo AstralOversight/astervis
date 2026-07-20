@@ -23,24 +23,24 @@ function chainGet(array, ids) {
 
 function addFilter(selected, value) {
     var row = document.createElement("tr");
-    var select = "<select name='filter-value' id='filter-value' onchange='typeFields()' alt='Field to filter'>";
+    var filterName = "<select name='filter-name' id='filter-name' onchange='typeFields()' alt='Field to filter'>";
     var filterType = "<select name='filter-type' id='filter-type' alt='Method of filtering'>";
-    var input = "<input id='value' name='value' alt='Filter value'";
+    var filterValue = "<input name='filter-value' id='filter-value' alt='Filter value'";
     var selType = fieldGroups[0].values[0].type;
 
     // Create the options in the filter dropdown
     fieldGroups.forEach((group) => {
-        select += "<optgroup label='"+group.name+"'>";
+        filterName += "<optgroup label='"+group.name+"'>";
         group.values.forEach((option) => {
             // If an option was selected and it's this one, mark it as such
-            if (selected === option.id) {
-                select += "<option value='"+group.id+"."+option.id+"' selected>"+option.id+"</option>";
+            if (selected === group.id+"."+option.id) {
+                filterName += "<option value='"+group.id+"."+option.id+"' selected>"+option.id+"</option>";
                 selType = option.type;
-            } else select += "<option value='"+group.id+"."+option.id+"'>"+option.id+"</option>";
+            } else filterName += "<option value='"+group.id+"."+option.id+"'>"+option.id+"</option>";
         })
-        select += "</optgroup>";
+        filterName += "</optgroup>";
     })
-    select += "</select>";
+    filterName += "</select>";
 
     // Create the filter type dropdown
     getFromId(opTypes, selType).values.forEach((operation) => {
@@ -54,39 +54,49 @@ function addFilter(selected, value) {
     // Format the input field.
     switch (selType) {
         case 'n':
-            input += " type='number'";
+            filterValue += " type='number'";
             break
         case 'd':
-            input += " type='datetime-local'";
+            filterValue += " type='datetime-local'";
             break
         case 'b':
-            input += " type='checkbox'";
-            if (value.substring(1).toLowerCase() == "true") {input += " checked";}
+            filterValue += " type='checkbox'";
+            if (value.substring(1).toLowerCase() == "true") {filterValue += " checked";}
             break
         case 's':
         default:
-            input += " type='text' maxlength='32'";
+            filterValue += " type='text' maxlength='32'";
     }
     if (value) {
-        input += " value='"+value.substring(1)+"'";
+        filterValue += " value='"+value.substring(1)+"'";
     }
-    input += "/>";
+    filterValue += "/>";
     
     // Final HTML for the element
     row.innerHTML = 
-        select+
+        filterName+
         filterType+
-        input;
+        filterValue;
     document.getElementById("filters").appendChild(row);
 
     document.getElementById("filter-expand").setAttribute("open", "");
 }
 
 function typeFields() {
-    var filters = document.getElementsByName("filter-value");
+    var filters = document.getElementsByName("filter-name");
     filters.forEach(filter => {
-        field = filter.nextElementSibling.nextElementSibling;
         var option = chainGet(fieldGroups, filter.selectedOptions[0].value);
+
+        var filterOperation = document.createElement("select");
+        filter.setAttribute("name", "filter-type")
+        filter.setAttribute("id", "filter-type");
+        getFromId(opTypes, option.type).values.forEach((operation) => {
+            filterOperation.innerHTML += "<option value='"+operation.id+"'>"+operation.name+"</option>";
+        });
+        filter.nextElementSibling.replaceWith(filterOperation);
+
+        var field = filter.nextElementSibling.nextElementSibling;
+        console.log(option.type);
         switch (option.type) {
             case "n":
                 field.setAttribute("type", "number");
@@ -109,15 +119,6 @@ function typeFields() {
                 field.setAttribute("maxlength", "32");
                 field.value = "";
         }
-
-        var filterType = document.createElement("select");
-        filter.setAttribute("name", "filter-type")
-        filter.setAttribute("id", "filter-type");
-        getFromId(opTypes, option.type).values.forEach((operation) => {
-            filterType.innerHTML += "<option value='"+operation.id+"'>"+operation.name+"</option>";
-        });
-
-        filter.nextElementSibling.replaceWith(filterType);
     });
 }
 
@@ -129,11 +130,9 @@ function search(newPage) {
     }
 
     var newURL = baseURL+"?page="+newPage;
-    var filters = document.getElementsByName("filter-value");
-    console.log(filters);
+    var filters = document.getElementsByName("filter-name");
     filters.forEach(filter => {
         field = filter.nextElementSibling.nextElementSibling;
-        console.log(field.value);
         if (field.value) {
             newURL += "&" + encodeURIComponent(filter.value) +
                         "=" + encodeURIComponent(filter.nextElementSibling.value) +

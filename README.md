@@ -25,3 +25,29 @@ Adding observations:
     - The Domain should be something like `data.asc-csa.gc.ca` and the "S path" would be like `/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/2026`
 4. Wait a bit (depends on how many folders/sub-folders exist)
 5. Return to the main site and view all the observations
+
+## Setting up Astervis (On the FSDH)
+Prerequisites:
+1. Access to the FSDH
+3. Access to this Git repository
+
+Steps:
+1. In the FSDH, obtain the Web App and SQL Database tools
+2. In the Web App configuration, do the following:
+    - Enter the Git repo URL (https://github.com/AstralOversight/astervis.git) and Docker compose file path (`docker-compose-az.yml`)
+    - Activate URL rewriting
+    - Add the Environment variables found in the `.env-blank` file to the Web App
+        - Make sure to adjust them as needed
+        - The `DJANGO_BASE_URL` for example will most likely resemble `/app/<Workspace Name>/`, it can be seen under `Proxy URL for development` in the Web application information section
+        - The Database info can be found in the SQL Database section if you are a project lead
+        - Superuser credential variables will be somewhat important as there is no direct command line access
+3. Redeploy/Start/Restart the Web App as needed.
+
+Adding observations:
+1. Set up a Django admin/superuser account
+    - (Via the environment variables if not already done)
+2. Log in using those credentials at [Site here]/admin/
+3. Click the button to add an observation location
+    - The Domain should be something like `data.asc-csa.gc.ca` and the "S path" would be like `/users/OpenData_DonneesOuvertes/pub/NEOSSAT/ASTRO/2026`
+4. Wait a bit (depends on how many folders/sub-folders exist)
+5. Return to the main site and view all the observations

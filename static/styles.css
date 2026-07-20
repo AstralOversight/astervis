@@ -52,7 +52,6 @@ details table {
 table {
   border-collapse: collapse;
   font-size: 0.8rem;
-  letter-spacing: 1px;
 }
 
 tbody > tr:nth-of-type(odd),

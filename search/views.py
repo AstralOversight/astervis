@@ -15,20 +15,20 @@ searches = [
         # Match
         "{param} LIKE '{value}'",
         # Contains
-        "{param} LIKE '{value}'",
-        # Greater
-        "{param} LIKE '{value}'",
-        # Lesser
-        "{param} LIKE '{value}'",
+        "{param} LIKE '%%{value}%%'",
+        # Starts with
+        "{param} LIKE '{value}%%'",
+        # Ends with
+        "{param} LIKE '%%{value}'",
         # Exclude
-        "NOT {param} LIKE '{value}'",
+        "NOT {param} LIKE '%%{value}%%'",
     ],
     # Number
     [
         # Operation
         # Match
         "{param} = {value}",
-        # Contains
+        # Error
         "{param} = {value}",
         # Greater
         "{param} > {value}",
@@ -42,11 +42,11 @@ searches = [
         # Operation
         # Match
         "{param} = '{value}'",
-        # Contains
+        # Within 24h
         "{param} = '{value}'",
-        # Greater
+        # Before
         "{param} > '{value}'",
-        # Lesser
+        # After
         "{param} < '{value}'",
         # Exclude
         "NOT {param} = '{value}'",
@@ -54,20 +54,20 @@ searches = [
     # Bool
     [
         # Operation
-        # Match
+        # Is
         "{param} IS {value}",
-        # Contains
+        # Error
         "{param} IS {value}",
-        # Greater
+        # Error
         "{param} IS {value}",
-        # Lesser
+        # Error
         "{param} IS {value}",
-        # Exclude
+        # Is not
         "NOT {param} IS {value}",
     ],
 ]
 
-operations = '[{"id":"s","values":[' \
+operationsJSON = '[{"id":"s","values":[' \
 '{"id":"m","name":"matches"},' \
 '{"id":"c","name":"contains"},' \
 '{"id":"l","name":"starts with"},' \
@@ -88,62 +88,57 @@ operations = '[{"id":"s","values":[' \
 '{"id":"m","name":"is"},' \
 '{"id":"e","name":"is not"}]}]'
 
+groups = {"set":[ObservationSet,"Set"],
+           "header":[ObsHeader,"Header"]}
+
+fieldsJSON = '['
+for group in groups:
+    fieldsJSON += '{"id":"'+group+'","name":"'+groups[group][1]+'","values":['
+    for field in groups[group][0]._meta.get_fields():
+        if (not isinstance(field, ManyToOneRel)):
+            field_type = field
+            match field.__class__:
+                case fields.IntegerField | fields.FloatField | fields.BigAutoField | fields.BigIntegerField | fields.related.ForeignKey:
+                    field_type = "n"
+                case fields.DateTimeField:
+                    field_type = "d"
+                case fields.BooleanField:
+                    field_type = "b"
+                case fields.CharField | fields.TextField | _:
+                    field_type = "s"
+            fieldsJSON += '{"id":"'+field.attname+'","type":"'+field_type+'"},'
+    fieldsJSON = fieldsJSON[:-1] + ']},'
+fieldsJSON = fieldsJSON[:-1] + ']'
+
 def index(request):
     return HttpResponse("Hello, you are at the search index.")
 
 def page(request):
-    fieldsJSON = '[{"id":"set","name":"Set","values":['
-    for field in ObservationSet._meta.get_fields():
-        type = field
-        match field.__class__:
-            case fields.IntegerField | fields.FloatField | fields.BigAutoField | fields.BigIntegerField | fields.related.ForeignKey:
-                type = "n"
-            case fields.DateTimeField:
-                type = "d"
-            case fields.BooleanField:
-                type = "b"
-            case fields.CharField | fields.TextField | _:
-                type = "s"
-        fieldsJSON += '{"id":"'+field.attname+'","type":"'+type+'"},'
-    fieldsJSON = fieldsJSON[:-1] + ']},{"id":"header","name":\"Header\","values":['
-    for field in ObsHeader._meta.get_fields():
-        if (not isinstance(field, ManyToOneRel)):
-            type = field
-            match field.__class__:
-                case fields.IntegerField | fields.FloatField | fields.BigAutoField | fields.BigIntegerField | fields.related.ForeignKey:
-                    type = "n"
-                case fields.DateTimeField:
-                    type = "d"
-                case fields.BooleanField:
-                    type = "b"
-                case fields.CharField | fields.TextField | _:
-                    type = "s"
-            fieldsJSON += '{"id":"'+field.attname+'","type":"'+type+'"},'
-    fieldsJSON = fieldsJSON[:-1] + "]}]"
-
     search = ""
     for param in request.GET:
         if param not in specialTerms:
             if search: 
                 search += " AND "
             
-            type = 0
+            search_type = 0
             value = request.GET[param][1:]
-            field = ObservationSet._meta.get_field(param)
-            match field.__class__:
+            cval = request.GET[param][0]
+            group = param.split('.')[0]
+            field = param.split('.')[1]
+            match groups[group][0]._meta.get_field(field).__class__:
                 case fields.IntegerField | fields.FloatField | fields.BigAutoField | fields.BigIntegerField | fields.related.ForeignKey:
-                    type = 1
+                    search_type = 1
                 case fields.DateTimeField:
-                    type = 2
-                    value = " ".join(request.GET[param][1:].split("T"))
+                    search_type = 2
+                    value = " ".join(value.split("T"))
                 case fields.BooleanField:
-                    type = 3
-                    value = "True" if (request.GET[param][1:] == "on" or request.GET[param][1:] == "true") else "False"
+                    search_type = 3
+                    value = "True" if (value == "on" or value == "true") else "False"
                 case fields.CharField | fields.TextField | _:
-                    type = 0
+                    search_type = 0
             
             comp = 0
-            match request.GET[param][0]:
+            match cval:
                 case "c":
                     comp = 1
                 case "g":
@@ -155,11 +150,11 @@ def page(request):
                 case "m" | _:
                     comp = 0
             
-            search += searches[type][comp].format(param=param, value=value)
+            search += searches[search_type][comp].format(param=param, value=value)
     
     sql = "SELECT id, name FROM visualizer_observationset"
     if search:
-        sql += " WHERE " + search + " ORDER BY dt ASC"
+        sql += f" WHERE {search} ORDER BY dt ASC"
 
     obss = ObservationSet.objects.raw(sql)
 
@@ -173,7 +168,7 @@ def page(request):
 
     context = {"observation_list": obss[(pageN-1)*perPage:pageN*perPage],
                "fields": fieldsJSON,
-               "ops": operations,
+               "ops": operationsJSON,
                "obs_len": obss.__len__(),
                "page": pageN,
                "tot_pages": (obss.__len__() // perPage) + 1}
