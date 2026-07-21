@@ -1,4 +1,5 @@
 const specialTerms = ["page"];
+var filterCount = 0;
 
 // Returns the first element in the array with the desired id.
 function getFromId(array, id) {
@@ -23,9 +24,9 @@ function chainGet(array, ids) {
 
 function addFilter(selected, value) {
     var row = document.createElement("tr");
-    var filterName = "<select name='filter-name' id='filter-name' onchange='typeFields()' alt='Field to filter'>";
-    var filterType = "<select name='filter-type' id='filter-type' alt='Method of filtering'>";
-    var filterValue = "<input name='filter-value' id='filter-value' alt='Filter value'";
+    var filterName = "<select name='filter-name' id='filter-name-"+filterCount+"' onchange='reloadFilter("+filterCount+")' alt='Field to filter'>";
+    var filterType = "<select name='filter-type' id='filter-type-"+filterCount+"' alt='Method of filtering'>";
+    var filterValue = "<input name='filter-value' id='filter-value-"+filterCount+"' alt='Filter value'";
     var selType = fieldGroups[0].values[0].type;
 
     // Create the options in the filter dropdown
@@ -78,48 +79,45 @@ function addFilter(selected, value) {
         filterType+
         filterValue;
     document.getElementById("filters").appendChild(row);
+    filterCount++;
 
     document.getElementById("filter-expand").setAttribute("open", "");
 }
 
-function typeFields() {
-    var filters = document.getElementsByName("filter-name");
-    filters.forEach(filter => {
-        var option = chainGet(fieldGroups, filter.selectedOptions[0].value);
+function reloadFilter(filterNum) {
+    var filter = document.getElementById("filter-name-"+filterNum);
+    var option = chainGet(fieldGroups, filter.selectedOptions[0].value);
 
-        var filterOperation = document.createElement("select");
-        filter.setAttribute("name", "filter-type")
-        filter.setAttribute("id", "filter-type");
-        getFromId(opTypes, option.type).values.forEach((operation) => {
-            filterOperation.innerHTML += "<option value='"+operation.id+"'>"+operation.name+"</option>";
-        });
-        filter.nextElementSibling.replaceWith(filterOperation);
-
-        var field = filter.nextElementSibling.nextElementSibling;
-        console.log(option.type);
-        switch (option.type) {
-            case "n":
-                field.setAttribute("type", "number");
-                field.removeAttribute("maxlength");
-                field.value = "";
-                break
-            case "d":
-                field.setAttribute("type", "datetime-local");
-                field.removeAttribute("maxlength");
-                field.value = "";
-                break
-            case "b":
-                field.setAttribute("type", "checkbox");
-                field.removeAttribute("maxlength");
-                field.value = "";
-                break
-            case "s":
-            default:
-                field.setAttribute("type", "text");
-                field.setAttribute("maxlength", "32");
-                field.value = "";
-        }
+    var filterOperation = document.createElement("select");
+    filterOperation.setAttribute("name", "filter-type")
+    filterOperation.setAttribute("id", "filter-type-"+filterNum);
+    getFromId(opTypes, option.type).values.forEach((operation) => {
+        filterOperation.innerHTML += "<option value='"+operation.id+"'>"+operation.name+"</option>";
     });
+    document.getElementById("filter-type-"+filterNum).replaceWith(filterOperation);
+
+    var field = document.getElementById("filter-value-"+filterNum);
+    switch (option.type) {
+        case "n":
+            field.setAttribute("type", "number");
+            field.removeAttribute("maxlength");
+            field.value = "";
+            break
+        case "d":
+            field.setAttribute("type", "datetime-local");
+            field.removeAttribute("maxlength");
+            field.value = "";
+            break
+        case "b":
+            field.setAttribute("type", "checkbox");
+            field.removeAttribute("maxlength");
+            field.value = "";
+            break
+        case "s":
+        default:
+            field.setAttribute("type", "text");
+            field.setAttribute("maxlength", "32");
+    }
 }
 
 function search(newPage) {

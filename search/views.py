@@ -93,7 +93,7 @@ def page(request):
             
             search += operations[type_code][op][1].format(param=param, value=value)
     
-    sql = "SELECT id, name FROM visualizer_observationset as set NATURAL JOIN visualizer_obsheader as header"
+    sql = "SELECT id, name FROM visualizer_observationset as set" # NATURAL JOIN visualizer_obsheader as header
     if search:
         sql += f" WHERE {search}"
     sql += " ORDER BY dt ASC"

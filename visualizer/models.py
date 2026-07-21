@@ -124,4 +124,4 @@ class ObservationSet(models.Model):
         r = (sigil, "❌")[self.raw is None or self.raw is False]
         c = (sigil, "❌")[self.cor is None or self.cor is False]
         d = (sigil, "❌")[self.cord is None or self.cord is False]
-        return "(Observation " + self.name + " | R:" + r + " C:" + c + " D:" + d + ")"
+        return "Observation " + self.name + " | R:" + r + " C:" + c + " D:" + d
