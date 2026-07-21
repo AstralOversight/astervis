@@ -19,8 +19,6 @@ var callback = function() {
 
     const width = header.get('NAXIS1'); // get image width
     const height = header.get('NAXIS2'); // get image height
-    canvas.width = width;
-    canvas.height = height;
 
     curObs = header.get('PRODUCT');
 
@@ -50,6 +48,8 @@ var callback = function() {
             imgData.data[i*4 + 3] = 255;
         };
 
+        canvas.width = width;
+        canvas.height = height;
         ctx.putImageData(imgData, 0, 0);
 
         graph()
