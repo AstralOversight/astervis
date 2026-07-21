@@ -73,6 +73,7 @@ def index(request):
 
 def page(request):
     search = ""
+    has_header = False
     for param in request.GET:
         if param not in specialTerms:
             if search: 
@@ -80,6 +81,9 @@ def page(request):
             
             group = param.split('.')[0]
             field = param.split('.')[1]
+
+            if (not has_header and group == "header") :
+                has_header = True
 
             op = request.GET[param][0]
             value = request.GET[param][1:]
@@ -93,10 +97,12 @@ def page(request):
             
             search += operations[type_code][op][1].format(param=param, value=value)
     
-    sql = "SELECT id, name FROM visualizer_observationset as set" # NATURAL JOIN visualizer_obsheader as header
+    sql = "SELECT set.id, set.name FROM visualizer_observationset AS set"
     if search:
+        if has_header:
+            sql += " INNER JOIN visualizer_obsheader AS header ON set.header_id = header.id"
         sql += f" WHERE {search}"
-    sql += " ORDER BY dt ASC"
+    sql += " ORDER BY dt ASC;"
 
     obss = ObservationSet.objects.raw(sql)
 
