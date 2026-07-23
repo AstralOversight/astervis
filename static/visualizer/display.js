@@ -1,4 +1,5 @@
 var mapMin = 0;
+var initGuess = false;
 
 const params = new URLSearchParams(document.location.search);
 const rawmap = {};
@@ -25,22 +26,28 @@ var callback = function() {
     //Draw the image
     const imgData = ctx.createImageData(width, height);
     data.getFrame(0, (pixels) => {
-        //Due to the side full of black and white pixels, this is kinda broken
-        // On further inspection, they're not actually fully black???
-        var totminmax = FITS.ImageUtils.getExtent(pixels);
-        mapMin = totminmax[0];
-        dark_range.min = totminmax[0];
-        dark_range.max = totminmax[1];
-        light_range.min = totminmax[0];
-        light_range.max = totminmax[1];
+        // Create the value map and try to find suitable inital values for black & white.
+        if (!initGuess) {
+            var totminmax = FITS.ImageUtils.getExtent(pixels);
+            mapMin = totminmax[0];
+            dark_range.min = totminmax[0];
+            dark_range.max = totminmax[1];
+            light_range.min = totminmax[0];
+            light_range.max = totminmax[1];
+
+            for (var i = 0; i < pixels.length; i++) {
+                summap(rawmap, pixels[i]);
+            };
+
+            guesstimateBW();
+            initGuess = true;
+        }
 
         const range = light_range.value - dark_range.value;
 
         // Paint the pixels.
         for (var i = 0; i < pixels.length; i++) {
             var value = ((pixels[i] - dark_range.value) / range) * 255;
-
-            summap(rawmap, pixels[i]);//-totminmax[0]);//+header.get('BZERO'));???????? maybe?? idk,,,
 
             imgData.data[i*4 + 0] = value;
             imgData.data[i*4 + 1] = value;
@@ -65,6 +72,35 @@ var callback = function() {
             info_list.appendChild(item);
         }
     });
+}
+
+function guesstimateBW() {
+    const values = Object.entries(rawmap);
+    const dark_range = document.getElementById("dark");
+    const light_range = document.getElementById("light");
+
+    // Maximum pixel count of light level.
+    var max = 0;
+    var tot = 0;
+    var light_guess;
+    var peak = [0, 0];
+    for (let i = 0; i < values.length; i++) {
+        tot += values[i][1];
+        if (max < values[i][1]) max = values[i][1];
+        if (values[i][1] >= peak[1]) {
+            peak = [values[i][0], values[i][1]];
+            console.log(values[i]);
+        }
+    }
+    dark_range.value = parseInt(peak[0]) + mapMin;
+    light_guess = tot;
+    for (let i = values.length-1; i >= 0; i--) {
+        light_guess -= values[i][1];
+        if (light_guess <= tot * 0.999) {
+            light_range.value = parseInt(values[i][0]) + mapMin;
+            break;
+        }
+    }
 }
 
 function graph() {
