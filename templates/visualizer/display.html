@@ -46,6 +46,7 @@
                 document.location.href = "{% url 'visualizer' set.name %}?"+params.toString()
             }
         }
+        // Add the options for the available observations.
         selectedObservation = params.get("obs")
         if ("{{ set.raw }}" == "True") {
             if (selectedObservation == "RAW") selection.innerHTML += "<option value='raw' selected>Raw</option>";
