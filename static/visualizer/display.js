@@ -4,11 +4,8 @@ var initGuess = false;
 const params = new URLSearchParams(document.location.search);
 const rawmap = {};
 
-var summap = function(map, value) {
-    if (map[parseInt(value) - mapMin]) map[parseInt(value) - mapMin] = map[parseInt(value) - mapMin]+1;
-    else map[parseInt(value) - mapMin] = 1;
-}
-
+// The function that gets called once the FITS file has loaded.
+// Handles most things from the initial prep to the drawing to the cavases (observation adn graph.)
 var callback = function() {
     const canvas = document.getElementById("obsspace");
     const ctx = canvas.getContext("2d");
@@ -26,20 +23,9 @@ var callback = function() {
     //Draw the image
     const imgData = ctx.createImageData(width, height);
     data.getFrame(0, (pixels) => {
-        // Create the value map and try to find suitable inital values for black & white.
+        // Values that only need to be calculated at the start.
         if (!initGuess) {
-            var totminmax = FITS.ImageUtils.getExtent(pixels);
-            mapMin = totminmax[0];
-            dark_range.min = totminmax[0];
-            dark_range.max = totminmax[1];
-            light_range.min = totminmax[0];
-            light_range.max = totminmax[1];
-
-            for (var i = 0; i < pixels.length; i++) {
-                summap(rawmap, pixels[i]);
-            };
-
-            guesstimateBW();
+            initOnly(header, pixels)
             initGuess = true;
         }
 
@@ -55,13 +41,36 @@ var callback = function() {
             imgData.data[i*4 + 3] = 255;
         };
 
+        // Load the image onto the canvas.
         canvas.width = width;
         canvas.height = height;
         ctx.putImageData(imgData, 0, 0);
 
+        // Graph time.
         graph()
     })
+}
 
+// The data that only needs to be created/used at the start.
+// Includes the black/white options and initial values, light map data and the header list details.
+function initOnly(header, pixels) {
+    const dark_range = document.getElementById("dark");
+    const light_range = document.getElementById("light");
+    const totminmax = FITS.ImageUtils.getExtent(pixels);
+    mapMin = totminmax[0];
+    dark_range.min = totminmax[0];
+    dark_range.max = totminmax[1];
+    light_range.min = totminmax[0];
+    light_range.max = totminmax[1];
+
+    // Calculate the light map data.
+    for (var i = 0; i < pixels.length; i++) {
+        if (rawmap[parseInt(pixels[i]) - mapMin]) rawmap[parseInt(pixels[i]) - mapMin] = rawmap[parseInt(pixels[i]) - mapMin]+1;
+        else rawmap[parseInt(pixels[i]) - mapMin] = 1;
+    };
+    guesstimateBW();
+
+    // Create the header details list
     const info_list = document.getElementById("info-list");
     Object.entries(header.cards).forEach(([key, value]) => {
         if (value.value || value.comment) {
@@ -74,26 +83,27 @@ var callback = function() {
     });
 }
 
+// Tries to guess/estimate appropriate values for black and white pixels.
+// Black will be set to the most common value.
+// White will be set so that only the highest 0.1% of pixels are that colour.
 function guesstimateBW() {
     const values = Object.entries(rawmap);
     const dark_range = document.getElementById("dark");
     const light_range = document.getElementById("light");
 
-    // Maximum pixel count of light level.
-    var max = 0;
-    var tot = 0;
-    var light_guess;
-    var peak = [0, 0];
+    var tot = 0; // Total pixel count.
+    var peak = [0, 0]; // The light value with the most pixels. [value, count]
     for (let i = 0; i < values.length; i++) {
+        // Finds the total.
         tot += values[i][1];
-        if (max < values[i][1]) max = values[i][1];
+        // Updates the peak if a new one is found.
         if (values[i][1] >= peak[1]) {
             peak = [values[i][0], values[i][1]];
-            console.log(values[i]);
         }
     }
     dark_range.value = parseInt(peak[0]) + mapMin;
-    light_guess = tot;
+
+    var light_guess = tot;
     for (let i = values.length-1; i >= 0; i--) {
         light_guess -= values[i][1];
         if (light_guess <= tot * 0.999) {
@@ -103,6 +113,7 @@ function guesstimateBW() {
     }
 }
 
+// Draws the light graph
 function graph() {
     const canvas = document.getElementById("light-graph");
     const ctx = canvas.getContext("2d");
