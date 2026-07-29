@@ -1,5 +1,10 @@
 var mapMin = 0;
 var initGuess = false;
+var histo = {
+    width: 1000,
+    height: 300,
+    buffer: 20,
+};
 
 const params = new URLSearchParams(document.location.search);
 const rawmap = {};
@@ -47,7 +52,8 @@ var callback = function() {
         ctx.putImageData(imgData, 0, 0);
 
         // Graph time.
-        graph()
+        histo.width = width;
+        histogram()
     })
 }
 
@@ -81,6 +87,24 @@ function initOnly(header, pixels) {
             info_list.appendChild(item);
         }
     });
+
+    const canvas = document.getElementById("histogram");
+    const ctx = canvas.getContext("2d");
+    const style = window.getComputedStyle(canvas);
+    const bx = parseInt(style.getPropertyValue("border-left-width"));
+    const by = parseInt(style.getPropertyValue("border-top-width"));
+    canvas.addEventListener("click", (event) => { //mousemove
+        const x = event.clientX - canvas.getBoundingClientRect().left;
+        const y = event.clientY - canvas.getBoundingClientRect().top;
+
+        histogram();
+        
+        ctx.fillStyle = "blue";
+        ctx.fillRect(x-bx, 0, 1, canvas.height-histo.buffer);
+        const values = Object.entries(rawmap);
+        var ind = parseInt((x-bx)*values.length/canvas.width);
+        if (ind >= 0 && ind < values.length) document.getElementById("histogram-highlight").innerText = "Level "+(parseInt(values[ind][0])+mapMin)+": "+values[ind][1]+" pixels.";
+    });
 }
 
 // Tries to guess/estimate appropriate values for black and white pixels.
@@ -113,18 +137,18 @@ function guesstimateBW() {
     }
 }
 
-// Draws the light graph
-function graph() {
-    const canvas = document.getElementById("light-graph");
+// Draws the light histogram
+function histogram() {
+    const canvas = document.getElementById("histogram");
     const ctx = canvas.getContext("2d");
     const values = Object.entries(rawmap);
     const dark_range = document.getElementById("dark");
     const light_range = document.getElementById("light");
 
     // Dimensions
-    canvas.width = 1000;
-    canvas.height = 350;
-    const buffer = 20;
+    canvas.width = histo.width;
+    canvas.height = histo.height;
+    const buffer = histo.buffer;
 
     // Maximum pixel count of light level.
     var max = 0;
@@ -142,8 +166,8 @@ function graph() {
     for (let i = 0; i < values.length; i++) {
         ctx.lineTo(i*canvas.width/values.length, canvas.height-(values[i][1]*(canvas.height-buffer)/max)-buffer);
         // Current level text & tick
-        if (i % Math.floor(2*values.length/tickCount) == 0) ctx.fillText(parseInt(values[i][0])+mapMin, (i*canvas.width/values.length)+2, canvas.height-1)
-        if (i % Math.floor(2*values.length/tickCount) == Math.floor(values.length/tickCount)) ctx.fillText(parseInt(values[i][0])+mapMin, (i*canvas.width/values.length)+2, canvas.height-11)
+        if (i % (2*Math.floor(values.length/tickCount)) == 0) ctx.fillText(parseInt(values[i][0])+mapMin, (i*canvas.width/values.length)+2, canvas.height-1)
+        if (i % (2*Math.floor(values.length/tickCount)) == Math.floor(values.length/tickCount)) ctx.fillText(parseInt(values[i][0])+mapMin, (i*canvas.width/values.length)+2, canvas.height-Math.floor(histo.buffer/2)-1)
         if (i % Math.floor(values.length/tickCount) == 0) ctx.fillRect(i*canvas.width/values.length, canvas.height-buffer, 1, buffer);
 
         // Add to queue the bars for the dark & light zones.
