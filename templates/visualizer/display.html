@@ -7,7 +7,7 @@
     <p>Proposition: {{ set.header.prop_id }} - {{ set.header.title }}</p>
     <p>Taken: {{ set.dt }}</p>
     <p>Viewing: <select name='obs-sel' id='obs-sel' onchange='changeObs()' alt="Version switcher"></select></p>
-    <canvas id="obsspace" width="1024" height="1024" alt="Observation {{ set.name }}">
+    <canvas id="obs-canvas" class="obs-canvas" width="1024" height="1024" alt="Observation {{ set.name }}">
         The observation will go here. It is most likely rendering at the moment.
     </canvas>
     {% load static %}
@@ -62,8 +62,8 @@
             else selection.innerHTML += "<option value='cord'>Cord</option>";
         }
     </script>
-    <div class="histogram-region">
-        <canvas id="histogram" alt="Light histogram">A histogram displaying the dispersion of the pixel light levels.</canvas>
+    <div id="histogram-region" class="histogram-region" width="1000">
+        <canvas id="histogram" class="histogram-canvas" alt="Light histogram">A histogram displaying the dispersion of the pixel light levels.</canvas>
         <div class="histogram-info">
             <div>
                 <input type="number" id="dark" min="0" max="2000" value="0" onclick="reload()"/>
@@ -73,8 +73,6 @@
                 <input type="number" id="light" min="5000" max="10000" value="6000" onclick="reload()"/>
                 <label for="light">White value.</label>
             </div>
-        <!-- </div>
-        <div> -->
             <div><button onclick="reload()">Render</button></div>
             <div id="histogram-highlight"></div>
         </div>

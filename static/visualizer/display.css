@@ -1,7 +1,7 @@
 .histogram-region {
   padding: 5px 0px;
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: min-content 250px;
   canvas {
     grid-column-start: 1;
     grid-column-end: 2;
@@ -12,14 +12,13 @@
     border-radius: 5px;
     border: 10px solid var(--border-color);
     border-style: inset;
-    padding-left: 10px;
-    padding-top: 10px;
+    margin-left: 10px;
+    padding: 5px;
   }
   .histogram-highlight {
     padding-top: auto;
   }
   button {
     padding: 10px;
-    /* margin-top: auto; */
   }
 }

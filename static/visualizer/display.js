@@ -12,7 +12,7 @@ const rawmap = {};
 // The function that gets called once the FITS file has loaded.
 // Handles most things from the initial prep to the drawing to the cavases (observation adn graph.)
 var callback = function() {
-    const canvas = document.getElementById("obsspace");
+    const canvas = document.getElementById("obs-canvas");
     const ctx = canvas.getContext("2d");
     const dark_range = document.getElementById("dark");
     const light_range = document.getElementById("light");
@@ -51,8 +51,8 @@ var callback = function() {
         canvas.height = height;
         ctx.putImageData(imgData, 0, 0);
 
-        // Graph time.
-        histo.width = width;
+        // Histogram time.
+        histo.width = width - 250;
         histogram()
     })
 }
