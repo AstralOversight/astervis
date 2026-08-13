@@ -106,11 +106,16 @@ def search(request):
             # Add to the filter key the filter we are using
             key += "__" + operations[type_code][op][1]
             # Fix the value's formatting if it needs adjusting
-            match type_code:
-                case "d":
-                    value = " ".join(value.split("T"))
-                case "b":
-                    value = True if (value == "on" or value == "true") else False
+            try:
+                match type_code:
+                    case "n":
+                        value = float(value)
+                    case "d":
+                        value = " ".join(value.split("T"))
+                    case "b":
+                        value = True if (value == "on" or value == "true") else False
+            except:
+                break
 
             # Add the filter, if it needs to be inverted, do that too.
             if (operations[type_code][op][2]):

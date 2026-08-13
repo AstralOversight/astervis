@@ -67,11 +67,11 @@ table {
 
 tbody > tr:nth-of-type(odd),
 details li:nth-of-type(odd) {
-  background-color: var(--alt-bg-color);/*ghostwhite; lavenderblush; mintcream; lightcyan*/
+  background-color: var(--alt-bg-color);
 }
 tbody > tr:nth-of-type(even),
 details li:nth-of-type(even) {
-  background-color: var(--base-bg-color);/*ghostwhite; lavenderblush; mintcream; lightcyan*/
+  background-color: var(--base-bg-color);
 }
 
 thead,
