@@ -9,10 +9,9 @@ Prerequisites:
 
 Steps:
 1. Using Git, clone this repository to your desired location (in WSL if present)
-2. Rename the `.env-blank` file to `.env` and complete the missing lines
+2. Adjust the `.env` file
     - Add a `DJANGO_SECRET_KEY`
     - Add Django superuser credentials if desired
-    - Clear the `DJANGO_BASE_URL` (since we are running this locally)
 3. Open the repository as a Dev Container in VS Code
 4. Wait for the container to build and run
 5. Head to http://localhost/ to verify functioning of site
@@ -36,7 +35,7 @@ Steps:
 2. In the Web App configuration, do the following:
     - Enter the Git repo URL (https://github.com/AstralOversight/astervis.git) and Docker compose file path (`docker-compose-az.yml`)
     - Activate URL rewriting
-    - Add the Environment variables found in the `.env-blank` file to the Web App
+    - Add the Environment variables found in the `.env` file to the Web App
         - Make sure to adjust them as needed
         - The `DJANGO_BASE_URL` for example will most likely resemble `/app/<Workspace Name>/`, it can be seen under `Proxy URL for development` in the Web application information section
         - The Database info can be found in the SQL Database section if you are a project lead
