@@ -109,7 +109,6 @@ def save_sets(sets, location:ObsLocation):
             location=location,
             f_path=s.f_path,
             dt=obstime,
-            saved=False,
             raw=r,
             cor=c,
             cord=d,
