@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from visualizer.models import ObservationSet, ObsHeader
+from visualizer.getfits import get_status, set_status
 from django.db.models import fields, ManyToOneRel, Q
 
 specialTerms = ["page"]
@@ -80,7 +81,8 @@ def index(request):
     return HttpResponse("Hello, you are at the index.")
 
 def home(request):
-    return render(request, "astervis/home.html")
+    context = {"fitsstatus": get_status()}
+    return render(request, "astervis/home.html", context)
 
 def search(request):
     # Create the filters for the query (we're starting with just a blank one)

@@ -7,6 +7,8 @@ import threading
 import time
 import datetime
 
+status = ""
+
 class ObsType:
     RAW = ".fits.gz"
     COR = "_cor.fits.gz"
@@ -42,19 +44,32 @@ def on_location_added(sender, instance, created, **kwargs):
     if created: threading.Thread(target=all_from_site, args=(instance,)).start()
 signals.post_save.connect(on_location_added, sender=ObsLocation)
 
+def set_status(msg:str, log:bool=True):
+    global status
+    status = msg
+    if (log): print(msg)
+
+def get_status() -> str:
+    return status
+
 # Searches the location and finds all sets.
 def all_from_site(location:ObsLocation):
-    print("Location requested: "+location.__str__())
-    with ftputil.FTPHost(location.domain, "anonymous", "") as ftp:
-        all_sets = get_from_path(ftp, location.domain, location.s_path)
+    set_status("Location requested: "+location.__str__())
+    try:
+        with ftputil.FTPHost(location.domain, "anonymous", "") as ftp:
+            all_sets = get_from_path(ftp, location.domain, location.s_path)
 
-    save_sets(all_sets, location)
+        set_status("Saving collected sets:")
+        save_sets(all_sets, location)
+    except Exception as error:
+        set_status("Ran into error while saving from site: "+error)
+    set_status("", False)
 
 # Finds all the sets in the given path.
 # Calls recursively.
 # Returns all the filesets that it finds.
 def get_from_path(ftp:ftputil.FTPHost, domain:str, f_path:str, wait_time=0.5):
-    print(f_path)
+    set_status("Retrieving from path: "+f_path)
     filesets = []
     files = []
     for elem in ftp.listdir(f_path):
@@ -85,11 +100,11 @@ def sort_into_sets(files):
         
         if not found:
             if "_cord" in f.name:
-                fs = FileSet(f.domain, f.f_path, f.name[:-13], None, None, f)
+                fs = FileSet(f.domain, f.f_path, f.name.split('.')[0][:-5], None, None, f)
             elif "_cor" in f.name:
-                fs = FileSet(f.domain, f.f_path, f.name[:-12], None, f, None)
+                fs = FileSet(f.domain, f.f_path, f.name.split('.')[0][:-4], None, f, None)
             else:  # It's RAW
-                fs = FileSet(f.domain, f.f_path, f.name[:-8], f, None, None)
+                fs = FileSet(f.domain, f.f_path, f.name.split('.')[0], f, None, None)
             
             sets.append(fs)
 
@@ -98,6 +113,7 @@ def sort_into_sets(files):
 # Creates an ObservationSet entry for each set given.
 def save_sets(sets, location:ObsLocation):
     for s in sets:
+        set_status("Saving: "+s.f_path+" "+s.base_name, False)
         strtime = s.base_name.split("_")[2]
         obstime = datetime.datetime(year=int(strtime[0:4]), month=1, day=1) + datetime.timedelta(days=int(strtime[4:7])-1, seconds=int(strtime[11:]), hours=int(strtime[7:9]), minutes=int(strtime[9:11]))
         r = (True, False)[s.raw is None]
